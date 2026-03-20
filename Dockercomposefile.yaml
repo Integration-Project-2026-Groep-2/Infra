@@ -1,0 +1,57 @@
+version: "3.9"
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: rabbitmq_management
+    hostname: rabbitmq
+    restart: always
+    environment:
+      RABBITMQ_ERLANG_COOKIE: securecookie
+      # Forceer RabbitMQ om naar bestanden te loggen in de container
+      RABBITMQ_LOGS: /var/log/rabbitmq/rabbit.log
+      RABBITMQ_SASL_LOGS: /var/log/rabbitmq/rabbit-sasl.log
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - rabbitmq_logs:/var/log/rabbitmq  # Persistent log volume
+      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+      - ./rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
+    expose:
+      - "5672" #Rabbitmq AMQP port
+      - "15672" # Management Web UI / HTTP API (Non-TLS / TLS)
+    networks:
+      - rabbitmq_net
+    # Voorkom dat Docker-daemon logs oneindig groeien
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  nginx:
+    image: nginx:stable
+    container_name: rabbitmq-proxy
+    restart: always
+    depends_on:
+      - rabbitmq
+    ports:
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./certs:/etc/nginx/certs
+      - nginx_logs:/var/log/nginx  # Persistent log volume voor proxy traffic
+    networks:
+      - rabbitmq_net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  rabbitmq_data:
+  rabbitmq_logs:
+  nginx_logs:
+
+networks:
+  rabbitmq_net:
