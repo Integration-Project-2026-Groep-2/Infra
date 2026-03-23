@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   rabbitmq:
-    image: rabbitmq:3.13-management
+    image: rabbitmq:4-management
     container_name: rabbitmq_management
     hostname: rabbitmq
     restart: always
