@@ -1,4 +1,12 @@
+x-logging: &default-logging
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "3"
+
 services:
+  # --- TEAM INFRA ---
   rabbitmq:
     image: rabbitmq:4-management
     container_name: rabbitmq_management
@@ -13,11 +21,7 @@ services:
       - rabbitmq_logs:/var/log/rabbitmq
     networks:
       - rabbitmq_net
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+    <<: *default-logging
 
   nginx:
     image: nginx:stable
@@ -34,16 +38,62 @@ services:
       - nginx_logs:/var/log/nginx
     networks:
       - rabbitmq_net
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+    <<: *default-logging
+
+  # --- TEAM FACTURATIE ---
+  billing_web: # Naam uniek gemaakt om verwarring met andere teams te voorkomen
+    image: nginx:alpine
+    container_name: billing_web
+    ports:
+      - "8080:80"
+    volumes:
+      - ./billing/src:/var/www/html # Pad aangepast naar een submap
+      - ./billing/docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - billing_app
+    networks:
+      - rabbitmq_net
+    <<: *default-logging
+
+  billing_app:
+    build: ./billing/docker/php
+    container_name: billing_app
+    env_file: ./billing/.env
+    volumes:
+      - ./billing/src:/var/www/html
+    environment:
+      - DB_HOST=billing_db
+      - RABBITMQ_HOST=rabbitmq # Verwijst naar de Infra RabbitMQ
+      - RABBITMQ_USER=${RABBITMQ_USER} # Zorg dat hun code deze variabelen uit jullie .env gebruikt:
+      - RABBITMQ_PASS=${RABBITMQ_PASS}
+    networks:
+      - rabbitmq_net
+    <<: *default-logging
+
+  billing_db:
+    build:
+      context: ./billing
+      dockerfile: docker/db/Dockerfile
+    container_name: billing_db
+    ports:
+      - "3307:3306"
+    environment:
+      MARIADB_DATABASE: fossbilling
+      MARIADB_ROOT_PASSWORD: root_password
+      MARIADB_USER: billing_user
+      MARIADB_PASSWORD: billing_password
+    volumes:
+      - billing_db_data:/var/lib/mysql
+    networks:
+      - rabbitmq_net
+    <<: *default-logging
 
 volumes:
   rabbitmq_data:
   rabbitmq_logs:
   nginx_logs:
+  billing_db_data: # Volume voor de facturatie database
 
 networks:
   rabbitmq_net:
+    driver: bridge
