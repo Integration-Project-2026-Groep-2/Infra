@@ -44,7 +44,7 @@ services:
   # --- TEAM PLANNING ---
   postgres_db:
     image: postgres:17-alpine
-    container_name: #naam vragen
+    container_name: infra_postgres
     restart: always
     environment:
       - POSTGRES_USER=${DB_USER}
