@@ -41,7 +41,7 @@ services:
 
 # --- TEAM CRM  ---
   crm:
-    image: ghcr.io/integration-project-2026-groep-2/crm:latest
+    image: ghcr.io/integration-project-2026-groep-2/crm:latest-dev
     container_name: crm
     restart: unless-stopped
     depends_on:
