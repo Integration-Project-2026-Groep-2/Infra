@@ -5,6 +5,7 @@ on:
     branches: [main]
 
 env:
+  SERVICE_NAME: infra
   IMAGE: ghcr.io/integration-project-2026-groep-2/infra
 
 jobs:
@@ -46,9 +47,7 @@ jobs:
       - name: Deploy to Dev
         uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.DEV_HOST }}
-          username: ${{ secrets.DEV_USER }}
-          key: ${{ secrets.DEV_SSH_KEY }}
-          script: |
-            docker pull ${{ env.IMAGE }}:latest-dev
-            docker compose -f /opt/app/docker-compose.yml up -d
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: ${{ env.SERVICE_NAME }}
