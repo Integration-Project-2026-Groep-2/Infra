@@ -1,3 +1,9 @@
+x-logging: &default-logging
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "3"
 services:
   rabbitmq:
     image: rabbitmq:4-management
@@ -13,11 +19,7 @@ services:
       - rabbitmq_logs:/var/log/rabbitmq
     networks:
       - rabbitmq_net
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+    <<: *default-logging
 
   nginx:
     image: nginx:stable
@@ -34,13 +36,9 @@ services:
       - nginx_logs:/var/log/nginx
     networks:
       - rabbitmq_net
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+    <<: *default-logging
 
-# database (gebruikt door Planning, CRM)
+# database (gebruikt door Planning, kassa)
   postgres_db:
     image: postgres:17-alpine
     container_name: infra_postgres
