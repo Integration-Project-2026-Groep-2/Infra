@@ -1,4 +1,12 @@
+x-logging: &default-logging
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "3"
+
 services:
+  # --- TEAM INFRA ---
   rabbitmq:
     image: rabbitmq:4-management
     container_name: rabbitmq_management
@@ -13,11 +21,8 @@ services:
       - rabbitmq_logs:/var/log/rabbitmq
     networks:
       - rabbitmq_net
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+
+    <<: *default-logging
 
   nginx:
     image: nginx:stable
@@ -29,21 +34,73 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./certs:/etc/nginx/certs:ro
       - nginx_logs:/var/log/nginx
     networks:
       - rabbitmq_net
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+    <<: *default-logging
 
+  # --- TEAM CONTROL ROOM SETTINGS ---
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.3.1
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+    ports:
+      - "${PORT_ELASTICSEARCH}:9200"
+    volumes:
+      - elasticsearch:/usr/share/elasticsearch/data
+    networks:
+      - controlroom-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\\|yellow\"'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:9.3.1
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "${PORT_KIBANA}:5601"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - controlroom-network
+
+    <<: *default-logging
+
+  controlroom:
+    build:
+      context: . # Team Controlroom moet hun code/Dockerfile in de root of een submap aanleveren
+      dockerfile: Dockerfile
+    container_name: controlroom
+    depends_on:
+      - elasticsearch
+    environment:
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672/
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    networks:
+      - controlroom-network
+      - rabbitmq_net # Toegevoegd zodat deze container RabbitMQ kan vinden op hostname 'rabbitmq'
+    restart: unless-stopped
+
+# --- VOLUMES & NETWORKS ---
 volumes:
   rabbitmq_data:
   rabbitmq_logs:
   nginx_logs:
+  elasticsearch:
+    driver: local
 
 networks:
   rabbitmq_net:
+    driver: bridge
+  controlroom-network:
+    driver: bridge
