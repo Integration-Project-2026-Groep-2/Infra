@@ -40,10 +40,53 @@ services:
         max-size: "10m"
         max-file: "3"
 
+
+  # --- TEAM PLANNING ---
+  postgres_db:
+    image: postgres:17-alpine
+    container_name: #naam vragen
+    restart: always
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=planning_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - rabbitmq_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d planning_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --- TEAM PLANNING ---
+  planning:
+    image: # image of build nog vragen
+    container_name: planning_service
+    restart: unless-stopped
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres_db:
+        condition: service_healthy
+    environment:
+      - PORT=3000
+      - DB_HOST=postgres_db
+      - DB_PORT=5432
+      - DB_NAME=planning_db
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672
+    networks:
+      - rabbitmq_net
+
 volumes:
   rabbitmq_data:
   rabbitmq_logs:
   nginx_logs:
+  postgres_data:
+
 
 networks:
   rabbitmq_net:
