@@ -41,8 +41,8 @@ services:
 
 # --- TEAM CRM  ---
   crm:
-    build: .
-    container_name: crm_service
+    image: ghcr.io/integration-project-2026-groep-2/crm:latest
+    container_name: crm
     restart: unless-stopped
     depends_on:
       rabbitmq:
