@@ -1,4 +1,12 @@
+x-logging: &default-logging
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "3"
+
 services:
+  # --- TEAM INFRA ---
   rabbitmq:
     image: rabbitmq:4-management
     container_name: rabbitmq_management
@@ -13,11 +21,7 @@ services:
       - rabbitmq_logs:/var/log/rabbitmq
     networks:
       - rabbitmq_net
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+    <<: *default-logging
 
   nginx:
     image: nginx:stable
@@ -34,16 +38,94 @@ services:
       - nginx_logs:/var/log/nginx
     networks:
       - rabbitmq_net
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+    <<: *default-logging
+
+  # --- TEAM FACTURATIE ---
+  
+
+  billing_app:
+    image: ghcr.io/integration-project-2026-groep-2/facturatie:latest-dev
+    container_name: billing_app
+    env_file: ./billing/.env
+
+    environment:
+      - DB_HOST=billing_db
+      - RABBITMQ_HOST=rabbitmq # Verwijst naar de Infra RabbitMQ
+      - RABBITMQ_USER=${RABBITMQ_USER} # Zorg dat hun code deze variabelen uit jullie .env gebruikt:
+      - RABBITMQ_PASS=${RABBITMQ_PASS}
+    networks:
+      - rabbitmq_net
+    <<: *default-logging
+
+  billing_db:
+    image: mariadb:11.8
+    container_name: billing_db
+    ports:
+      - "3307:3306"
+    environment:
+      MARIADB_DATABASE: fossbilling
+      MARIADB_ROOT_PASSWORD: root_password
+      MARIADB_USER: billing_user
+      MARIADB_PASSWORD: billing_password
+    volumes:
+      - billing_db_data:/var/lib/mysql
+    networks:
+      - rabbitmq_net
+    <<: *default-logging
+
+    # --- TEAM MAILING ---
+  mailing_app:
+    image: ghcr.io/integration-project-2026-groep-2/mailing:latest-dev
+    container_name: mailing_app
+    env_file: ./mailing/.env
+    ports:
+      - "${MAILING_APP_PORT:-3000}:3000"
+    depends_on:
+      mailing_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+    environment:
+      - DB_HOST=mailing_db
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASS}
+    networks:
+      - rabbitmq_net
+    restart: unless-stopped
+    <<: *default-logging
+
+  mailing_db:
+    image: mariadb:11.8
+    container_name: mailing_db
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MAILING_DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${MAILING_DB_NAME}
+      MARIADB_USER: ${MAILING_DB_USER}
+      MARIADB_PASSWORD: ${MAILING_DB_PASS}
+    ports:
+      - "${MAILING_DB_EXPOSE_PORT:-3308}:3306"
+    volumes:
+      - mailing_db_data:/var/lib/mysql
+      - ./mailing/docker/db/init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - rabbitmq_net
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 25s
+    restart: unless-stopped
+    <<: *default-logging
 
 volumes:
   rabbitmq_data:
   rabbitmq_logs:
   nginx_logs:
+  billing_db_data: # Volume voor de facturatie database
+  mailing_db_data: # volume toegevoegd voor Mailing data
 
 networks:
   rabbitmq_net:
+    driver: bridge
