@@ -46,6 +46,9 @@ services:
     image: drupal:11-apache
     container_name: frontend_drupal
     restart: unless-stopped
+    depends_on:
+      frontend_db:
+        condition: service_healthy
     environment:
       - DRUPAL_DB_HOST=frontend_db
       - DRUPAL_DB_NAME=${FRONTEND_DB_NAME}
@@ -69,6 +72,12 @@ services:
       MARIADB_USER: ${FRONTEND_DB_USER}
       MARIADB_PASSWORD: ${FRONTEND_DB_PASS}
       MARIADB_ROOT_PASSWORD: ${FRONTEND_DB_ROOT_PASS}
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 3
     volumes:
       - frontend_db_data:/var/lib/mysql
     networks:
