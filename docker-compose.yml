@@ -43,9 +43,9 @@ services:
 
   # --- TEAM FRONTEND ---
   frontend_drupal:
-    image: drupal:10-apache
+    image: drupal:11-apache
     container_name: frontend_drupal
-    restart: always
+    restart: unless-stopped
     environment:
       - DRUPAL_DB_HOST=frontend_db
       - DRUPAL_DB_NAME=${FRONTEND_DB_NAME}
@@ -61,15 +61,16 @@ services:
     <<: *default-logging
 
   frontend_db:
-    image: postgres:16
+    image: mariadb:12
     container_name: frontend_db
-    restart: always
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: ${FRONTEND_DB_NAME}
-      POSTGRES_USER: ${FRONTEND_DB_USER}
-      POSTGRES_PASSWORD: ${FRONTEND_DB_PASS}
+      MARIADB_DATABASE: ${FRONTEND_DB_NAME}
+      MARIADB_USER: ${FRONTEND_DB_USER}
+      MARIADB_PASSWORD: ${FRONTEND_DB_PASS}
+      MARIADB_ROOT_PASSWORD: ${FRONTEND_DB_ROOT_PASS}
     volumes:
-      - frontend_db_data:/var/lib/postgresql/data
+      - frontend_db_data:/var/lib/mysql
     networks:
       - rabbitmq_net
     <<: *default-logging
