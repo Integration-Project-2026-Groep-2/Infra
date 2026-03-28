@@ -42,10 +42,10 @@ services:
 
 
   # --- TEAM PLANNING ---
-  postgres_db:
+  planning_db:
     image: postgres:17-alpine
-    container_name: infra_postgres
-    restart: always
+    container_name: infra_postgres_planning
+    restart: unless-stopped
     environment:
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
@@ -72,9 +72,9 @@ services:
         condition: service_healthy
     environment:
       - PORT=3000
-      - DB_HOST=postgres_db
+      - DB_HOST=postgres_db_host
       - DB_PORT=5432
-      - DB_NAME=planning_db
+      - DB_NAME=planning_db_name
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
       - RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672
