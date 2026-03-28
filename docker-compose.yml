@@ -103,11 +103,54 @@ services:
       - rabbitmq_net
     <<: *default-logging
 
+
+  # --- TEAM PLANNING ---
+  planning_db:
+    image: postgres:17-alpine
+    container_name: infra_postgres_planning
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=planning_db
+    volumes:
+      - postgres_data_planning:/var/lib/postgresql/data
+    networks:
+      - rabbitmq_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d planning_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --- TEAM PLANNING ---
+  planning:
+    image: ghcr.io/integration-project-2026-groep-2/planning:latest-dev
+    container_name: planning_service
+    restart: unless-stopped
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres_db:
+        condition: service_healthy
+    environment:
+      - PORT=3000
+      - DB_HOST=planning_db_host
+      - DB_PORT=5432
+      - DB_NAME=planning_db_name
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672
+    networks:
+      - rabbitmq_net
+
 # --- VOLUMES & NETWORKS ---
 volumes:
   rabbitmq_data:
   rabbitmq_logs:
   nginx_logs:
+  postgres_data_planning:
+
   # Frontend
   drupal_modules:
   drupal_profiles:
