@@ -97,7 +97,6 @@ volumes:
   rabbitmq_logs:
   nginx_logs:
   elasticsearch:
-    driver: local
 
 networks:
   rabbitmq_net:
