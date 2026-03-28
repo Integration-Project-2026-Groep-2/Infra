@@ -51,7 +51,7 @@ services:
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=planning_db
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data_planning:/var/lib/postgresql/data
     networks:
       - rabbitmq_net
     healthcheck:
@@ -85,7 +85,7 @@ volumes:
   rabbitmq_data:
   rabbitmq_logs:
   nginx_logs:
-  postgres_data:
+  postgres_data_planning:
 
 
 networks:
