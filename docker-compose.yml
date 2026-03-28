@@ -38,18 +38,21 @@ services:
       - rabbitmq_net
     <<: *default-logging
 
-# database (gebruikt door Planning, kassa)
-  postgres_db:
+
+  # --- TEAM KASSA  ---
+# database (kassa)
+  kassa_db:
     image: postgres:17-alpine
-    container_name: infra_postgres
-    restart: always
+    container_name: infra_postgres_kassa
+    restart: unless-stopped
     environment:
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data_kassa:/var/lib/postgresql/data
     networks:
       - rabbitmq_net
+    <<: *default-logging
 
   # --- TEAM KASSA  ---
   kassa:
@@ -79,6 +82,7 @@ volumes:
   rabbitmq_data:
   rabbitmq_logs:
   nginx_logs:
+  postgres_data_kassa:
 
 networks:
   rabbitmq_net:
