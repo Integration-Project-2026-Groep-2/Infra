@@ -6,6 +6,7 @@ x-logging: &default-logging
       max-file: "3"
 
 services:
+  # --- TEAM INFRA ---
   rabbitmq:
     image: rabbitmq:4-management
     container_name: rabbitmq_management
@@ -30,6 +31,7 @@ services:
     restart: unless-stopped
     depends_on:
       - rabbitmq
+      - frontend_drupal # Wachten op de hoofdwebsite
     ports:
       - "30098:30098"
     volumes:
@@ -39,7 +41,8 @@ services:
     networks:
       - rabbitmq_net
     <<: *default-logging
-
+    
+    
 # --- TEAM CRM  ---
   crm:
     image: ghcr.io/integration-project-2026-groep-2/crm:latest-dev
@@ -58,12 +61,60 @@ services:
     networks:
       - rabbitmq_net
     <<: *default-logging
+    
+ 
+# --- TEAM FRONTEND ---
+  frontend_drupal:
+    image: drupal:11-apache
+    container_name: frontend_drupal
+    restart: unless-stopped
+    depends_on:
+      frontend_db:
+        condition: service_healthy
+    environment:
+      - DRUPAL_DB_HOST=frontend_db
+      - DRUPAL_DB_NAME=${FRONTEND_DB_NAME}
+      - DRUPAL_DB_USER=${FRONTEND_DB_USER}
+      - DRUPAL_DB_PASS=${FRONTEND_DB_PASS}
+    volumes:
+      - drupal_modules:/var/www/html/modules
+      - drupal_profiles:/var/www/html/profiles
+      - drupal_themes:/var/www/html/themes
+      - drupal_sites:/var/www/html/sites
 
+  frontend_db:
+    image: mariadb:12
+    container_name: frontend_db
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: ${FRONTEND_DB_NAME}
+      MARIADB_USER: ${FRONTEND_DB_USER}
+      MARIADB_PASSWORD: ${FRONTEND_DB_PASS}
+      MARIADB_ROOT_PASSWORD: ${FRONTEND_DB_ROOT_PASS}
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    volumes:
+      - frontend_db_data:/var/lib/mysql
+    networks:
+      - rabbitmq_net
+    <<: *default-logging
 
+# --- VOLUMES & NETWORKS ---
 volumes:
   rabbitmq_data:
   rabbitmq_logs:
   nginx_logs:
+  # Frontend
+  drupal_modules:
+  drupal_profiles:
+  drupal_themes:
+  drupal_sites:
+  frontend_db_data:
 
 networks:
   rabbitmq_net:
+    driver: bridge
