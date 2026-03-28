@@ -72,7 +72,7 @@ services:
         condition: service_healthy
     environment:
       - PORT=3000
-      - DB_HOST=postgres_db_host
+      - DB_HOST=planning_db_host
       - DB_PORT=5432
       - DB_NAME=planning_db_name
       - DB_USER=${DB_USER}
