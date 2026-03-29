@@ -1,0 +1,120 @@
+x-logging: &default-logging
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+services:
+  # --- TEAM INFRA ---
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: rabbitmq_management
+    hostname: rabbitmq
+    restart: unless-stopped
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASS}
+      - RABBITMQ_DEFAULT_VHOST=${RABBITMQ_VHOST}
+      - RABBITMQ_MANAGEMENT_PREFIX=${RABBITMQ_MANAGEMENT_PREFIX}
+      - RABBITMQ_ERLANG_COOKIE=securecookie
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - rabbitmq_logs:/var/log/rabbitmq
+    networks:
+      - rabbitmq_net
+    <<: *default-logging
+
+  nginx:
+    image: nginx:stable
+    container_name: rabbitmq-proxy
+    restart: unless-stopped
+    depends_on:
+      - rabbitmq
+      - frontend_drupal # Wachten op de hoofdwebsite
+    ports:
+      - "30098:30098"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+      - nginx_logs:/var/log/nginx
+    networks:
+      - rabbitmq_net
+    <<: *default-logging
+    
+    
+# --- TEAM CRM  ---
+  crm:
+    image: ghcr.io/integration-project-2026-groep-2/crm:latest-dev
+    container_name: crm
+    restart: unless-stopped
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672/
+      - SALESFORCE_USERNAME=${SF_USER}
+      - SALESFORCE_PASSWORD=${SF_PASS}
+      - SALESFORCE_SECURITY_TOKEN=${SF_TOKEN}
+      - SALESFORCE_DOMAIN=login
+      - LOG_LEVEL=INFO
+    networks:
+      - rabbitmq_net
+    <<: *default-logging
+    
+ 
+# --- TEAM FRONTEND ---
+  frontend_drupal:
+    image: drupal:11-apache
+    container_name: frontend_drupal
+    restart: unless-stopped
+    depends_on:
+      frontend_db:
+        condition: service_healthy
+    environment:
+      - DRUPAL_DB_HOST=frontend_db
+      - DRUPAL_DB_NAME=${FRONTEND_DB_NAME}
+      - DRUPAL_DB_USER=${FRONTEND_DB_USER}
+      - DRUPAL_DB_PASS=${FRONTEND_DB_PASS}
+    volumes:
+      - drupal_modules:/var/www/html/modules
+      - drupal_profiles:/var/www/html/profiles
+      - drupal_themes:/var/www/html/themes
+      - drupal_sites:/var/www/html/sites
+
+  frontend_db:
+    image: mariadb:12
+    container_name: frontend_db
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: ${FRONTEND_DB_NAME}
+      MARIADB_USER: ${FRONTEND_DB_USER}
+      MARIADB_PASSWORD: ${FRONTEND_DB_PASS}
+      MARIADB_ROOT_PASSWORD: ${FRONTEND_DB_ROOT_PASS}
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    volumes:
+      - frontend_db_data:/var/lib/mysql
+    networks:
+      - rabbitmq_net
+    <<: *default-logging
+
+# --- VOLUMES & NETWORKS ---
+volumes:
+  rabbitmq_data:
+  rabbitmq_logs:
+  nginx_logs:
+  # Frontend
+  drupal_modules:
+  drupal_profiles:
+  drupal_themes:
+  drupal_sites:
+  frontend_db_data:
+
+networks:
+  rabbitmq_net:
+    driver: bridge
