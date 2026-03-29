@@ -16,7 +16,7 @@ jobs:
       - name: Run tests
         run: |
           echo "Running tests..."
-          # Add your test commands here, e.g., npm test, pytest, etc.A
+          # Add your test commands here, e.g., npm test, pytest, etc.
 
   build-and-push:
     needs: test
