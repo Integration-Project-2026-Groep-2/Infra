@@ -41,6 +41,46 @@ services:
     networks:
       - rabbitmq_net
     <<: *default-logging
+
+
+  # --- TEAM KASSA  ---
+# database (kassa)
+  kassa_db:
+    image: postgres:18-alpine
+    container_name: infra_postgres_kassa
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - postgres_data_kassa:/var/lib/postgresql/data
+    networks:
+      - rabbitmq_net
+    <<: *default-logging
+
+  # --- TEAM KASSA  ---
+  kassa:
+    image: ghcr.io/integration-project-2026-groep-2/kassa:latest-dev
+    container_name: kassa_service
+    restart: unless-stopped
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672/
+      - ODOO_URL=${ODOO_URL}
+      - ODOO_DB=${ODOO_DB}
+      - ODOO_USERNAME=${ODOO_USERNAME}
+      - ODOO_PASSWORD=${ODOO_PASSWORD}
+      - SYSTEM_NAME=Kassa
+      - HEARTBEAT_INTERVAL=1
+      - STATUS_CHECK_INTERVAL=30
+      - LOG_LEVEL=INFO
+    networks:
+      - rabbitmq_net
+
+
+
     
     
 # --- TEAM CRM  ---
@@ -151,6 +191,7 @@ volumes:
   nginx_logs:
   postgres_data_planning:
 
+  postgres_data_kassa:
   # Frontend
   drupal_modules:
   drupal_profiles:
