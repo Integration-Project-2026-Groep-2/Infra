@@ -38,6 +38,7 @@ services:
     depends_on:
       - rabbitmq
       - frontend_drupal # Wachten op de hoofdwebsite
+      - kibana
     ports:
       - "30098:30098"
     volumes:
@@ -46,6 +47,7 @@ services:
       - nginx_logs:/var/log/nginx
     networks:
       - rabbitmq_net
+      - nginx
     <<: *default-logging
 
 
@@ -84,6 +86,7 @@ services:
         condition: service_healthy
     networks:
       - controlroom-network
+      - nginx
     <<: *default-logging
 
   controlroom:
@@ -115,6 +118,7 @@ services:
     networks:
       - rabbitmq_net
       - billing_net
+      - nginx
     <<: *default-logging
 
   billing_db:
@@ -155,6 +159,7 @@ services:
     networks:
       - rabbitmq_net
       - mailing_net
+      - nginx
     restart: unless-stopped
     <<: *default-logging
 
@@ -188,7 +193,7 @@ services:
   # database (kassa)
   kassa_db:
     image: postgres:18-alpine
-    container_name: infra_postgres_kassa
+    container_name: kassa_db
     restart: unless-stopped
     environment:
       - POSTGRES_USER=${KASSA_DB_USER}
@@ -196,7 +201,12 @@ services:
     volumes:
       - postgres_data_kassa:/var/lib/postgresql/data
     networks:
-      - rabbitmq_net
+      - kassa-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PLANNING_DB_USER} -d planning_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     <<: *default-logging
 
   odoo:
@@ -216,6 +226,8 @@ services:
       - odoo_web_data_kassa:/var/lib/odoo
       # Optional if you want to mount local custom Odoo modules:
       # - ./odoo/addons:/mnt/extra-addons
+    networks:
+      - kassa-network
     healthcheck:
       test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8069').read()\""]
       interval: 20s
@@ -233,7 +245,7 @@ services:
     environment:
       - RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672/
       - ODOO_URL=${ODOO_URL}
-      - ODOO_DB=${ODOO_DB}
+      - ODOO_DATABASE=${ODOO_DB}
       - ODOO_USERNAME=${ODOO_USERNAME}
       - ODOO_PASSWORD=${ODOO_PASSWORD}
       - SYSTEM_NAME=Kassa
@@ -242,6 +254,8 @@ services:
       - LOG_LEVEL=INFO
     networks:
       - rabbitmq_net
+      - kassa-network
+    <<: *default-logging
 
 
 # --- TEAM CRM  ---
@@ -282,6 +296,10 @@ services:
       - drupal_profiles:/var/www/html/profiles
       - drupal_themes:/var/www/html/themes
       - drupal_sites:/var/www/html/sites
+    networks:
+      - nginx
+      - rabbitmq_net
+      - frontend-network
 
   frontend_db:
     image: mariadb:12
@@ -302,6 +320,7 @@ services:
       - frontend_db_data:/var/lib/mysql
     networks:
       - rabbitmq_net
+      - frontend-network
     <<: *default-logging
 
 
@@ -317,8 +336,6 @@ services:
       - POSTGRES_DB=planning_db
     volumes:
       - postgres_data_planning:/var/lib/postgresql/data
-    networks:
-      - rabbitmq_net
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${PLANNING_DB_USER} -d planning_db"]
       interval: 10s
@@ -370,7 +387,13 @@ volumes:
 networks:
   rabbitmq_net:
     driver: bridge
+  nginx:
+    driver: bridge
   controlroom-network:
+    driver: bridge
+  kassa-network:
+    driver: bridge
+  frontend-network:
     driver: bridge
   billing_net:
     driver: bridge
