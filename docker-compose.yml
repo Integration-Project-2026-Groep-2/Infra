@@ -55,6 +55,7 @@ services:
       - RABBITMQ_PASS=${RABBITMQ_PASS}
     networks:
       - rabbitmq_net
+      - billing_net
     <<: *default-logging
 
   billing_db:
@@ -63,14 +64,14 @@ services:
     ports:
       - "3307:3306"
     environment:
-      MARIADB_DATABASE: fossbilling
-      MARIADB_ROOT_PASSWORD: root_password
-      MARIADB_USER: billing_user
-      MARIADB_PASSWORD: billing_password
+      MARIADB_DATABASE: ${BILLING_DB_NAME}
+      MARIADB_ROOT_PASSWORD: ${BILLING_DB_ROOT_PASS}
+      MARIADB_USER: ${BILLING_DB_USER}
+      MARIADB_PASSWORD: ${BILLING_DB_PASS}
     volumes:
       - billing_db_data:/var/lib/mysql
     networks:
-      - rabbitmq_net
+      - billing_net
     <<: *default-logging
 
     # --- TEAM MAILING ---
@@ -92,6 +93,7 @@ services:
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASS}
     networks:
       - rabbitmq_net
+      - mailing_net
     restart: unless-stopped
     <<: *default-logging
 
@@ -109,7 +111,7 @@ services:
       - mailing_db_data:/var/lib/mysql
       - ./mailing/docker/db/init:/docker-entrypoint-initdb.d:ro
     networks:
-      - rabbitmq_net
+      - mailing_net
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s
@@ -128,4 +130,8 @@ volumes:
 
 networks:
   rabbitmq_net:
+    driver: bridge
+  billing_net:
+    driver: bridge
+  mailing_net:
     driver: bridge
