@@ -23,6 +23,12 @@ services:
       - rabbitmq_logs:/var/log/rabbitmq
     networks:
       - rabbitmq_net
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q check_running && rabbitmq-diagnostics -q check_local_alarms"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s # Give RabbitMQ time to boot before starting checks
     <<: *default-logging
 
   nginx:
@@ -185,8 +191,8 @@ services:
     container_name: infra_postgres_kassa
     restart: unless-stopped
     environment:
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_USER=${KASSA_DB_USER}
+      - POSTGRES_PASSWORD=${KASSA_DB_PASSWORD}
     volumes:
       - postgres_data_kassa:/var/lib/postgresql/data
     networks:
@@ -292,7 +298,7 @@ services:
     networks:
       - rabbitmq_net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d planning_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${PLANNING_DB_USER} -d planning_db"]
       interval: 10s
       timeout: 5s
       retries: 5
