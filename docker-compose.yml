@@ -302,7 +302,7 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
-      postgres_db:
+      planning_db:
         condition: service_healthy
     environment:
       - PORT=3000
