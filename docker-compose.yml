@@ -196,7 +196,7 @@ services:
     volumes:
       - postgres_data_kassa:/var/lib/postgresql/data
     networks:
-      - rabbitmq_net
+      - kassa-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${PLANNING_DB_USER} -d planning_db"]
       interval: 10s
@@ -221,6 +221,8 @@ services:
       - odoo_web_data_kassa:/var/lib/odoo
       # Optional if you want to mount local custom Odoo modules:
       # - ./odoo/addons:/mnt/extra-addons
+    network:
+      - kassa-network
     healthcheck:
       test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8069').read()\""]
       interval: 20s
@@ -247,6 +249,8 @@ services:
       - LOG_LEVEL=INFO
     networks:
       - rabbitmq_net
+      - kassa-network
+    <<: *default-logging
 
 
 # --- TEAM CRM  ---
@@ -376,6 +380,8 @@ networks:
   rabbitmq_net:
     driver: bridge
   controlroom-network:
+    driver: bridge
+  kassa-network:
     driver: bridge
   billing_net:
     driver: bridge
