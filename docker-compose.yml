@@ -40,6 +40,12 @@ services:
       - nginx_logs:/var/log/nginx
     networks:
       - rabbitmq_net
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q check_running && rabbitmq-diagnostics -q check_local_alarms"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s # Give RabbitMQ time to boot before starting checks
     <<: *default-logging
 
 
