@@ -50,11 +50,11 @@ services:
       - nginx
     command: |
       /bin/sh -c "
-      echo \"$${CONTROL_ROOM_USER}:\" > /etc/nginx/.htpasswd-control-room
+      echo \"${CONTROL_ROOM_USER}:\" > /etc/nginx/.htpasswd-control-room
       echo $$CONTROL_ROOM_PASS | openssl passwd -apr1 -stdin >> /etc/nginx/.htpasswd-control-room
-      echo \"$${FACTURATIE_USER}:\" > /etc/nginx/.htpasswd-facturatie
+      echo \"${FACTURATIE_USER}:\" > /etc/nginx/.htpasswd-facturatie
       echo $$FACTURATIE_PASS | openssl passwd -apr1 -stdin >> /etc/nginx/.htpasswd-facturatie
-      echo \"$${KASSA_USER}:\" > /etc/nginx/.htpasswd-kassa
+      echo \"${KASSA_USER}:\" > /etc/nginx/.htpasswd-kassa
       echo $$KASSA_PASS | openssl passwd -apr1 -stdin >> /etc/nginx/.htpasswd-kassa
       nginx -g 'daemon off;'
       "
