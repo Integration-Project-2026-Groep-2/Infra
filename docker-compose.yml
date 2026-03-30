@@ -204,12 +204,12 @@ services:
     container_name: kassa_odoo
     restart: unless-stopped
     depends_on:
-      db:
+      kassa_db:
         condition: service_healthy
     environment:
-      HOST: db
-      USER: odoo
-      PASSWORD: odoo
+      HOST: kassa_db
+      USER: ${KASSA_DB_USER}
+      PASSWORD: ${KASSA_DB_PASSWORD}
     ports:
       - "8069:8069"
     volumes:
