@@ -93,7 +93,7 @@ services:
       - elasticsearch
       - rabbitmq
     environment:
-      - RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672/
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672/
       - ELASTICSEARCH_URL=http://elasticsearch:9200
     networks:
       - controlroom-network
