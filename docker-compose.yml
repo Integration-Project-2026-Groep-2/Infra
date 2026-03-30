@@ -46,6 +46,7 @@ services:
       - nginx_logs:/var/log/nginx
     networks:
       - rabbitmq_net
+      - nginx
     <<: *default-logging
 
 
@@ -84,6 +85,7 @@ services:
         condition: service_healthy
     networks:
       - controlroom-network
+      - nginx
     <<: *default-logging
 
   controlroom:
@@ -378,6 +380,8 @@ volumes:
 
 networks:
   rabbitmq_net:
+    driver: bridge
+  nginx:
     driver: bridge
   controlroom-network:
     driver: bridge
