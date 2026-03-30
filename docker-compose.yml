@@ -38,6 +38,7 @@ services:
     depends_on:
       - rabbitmq
       - frontend_drupal # Wachten op de hoofdwebsite
+      - kibana
     ports:
       - "30098:30098"
     volumes:
