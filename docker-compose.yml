@@ -43,6 +43,58 @@ services:
     <<: *default-logging
 
 
+  # --- TEAM CONTROL ROOM SETTINGS ---
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.3.1
+    container_name: elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+    ports:
+      - "${PORT_ELASTICSEARCH}:9200"
+    volumes:
+      - elasticsearch:/usr/share/elasticsearch/data
+    networks:
+      - controlroom-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\\|yellow\"'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    <<: *default-logging
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:9.3.1
+    container_name: kibana
+    restart: unless-stopped
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "${PORT_KIBANA}:5601"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - controlroom-network
+    <<: *default-logging
+
+  controlroom:
+    image: ghcr.io/integration-project-2026-groep-2/controlroom:latest-dev
+    container_name: controlroom
+    depends_on:
+      - elasticsearch
+      - rabbitmq
+    environment:
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672/
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    networks:
+      - controlroom-network
+      - rabbitmq_net # Toegevoegd zodat deze container RabbitMQ kan vinden op hostname 'rabbitmq'
+    restart: unless-stopped
+    
+    
   # --- TEAM FACTURATIE ---
   billing_app:
     image: ghcr.io/integration-project-2026-groep-2/facturatie:latest-dev
@@ -268,6 +320,8 @@ volumes:
   rabbitmq_data:
   rabbitmq_logs:
   nginx_logs:
+  # Controlroom
+  elasticsearch:
   billing_db_data: # Volume voor de facturatie database
   mailing_db_data: # volume toegevoegd voor Mailing data
   postgres_data_planning:
@@ -281,6 +335,8 @@ volumes:
 
 networks:
   rabbitmq_net:
+    driver: bridge
+  controlroom-network:
     driver: bridge
   billing_net:
     driver: bridge
