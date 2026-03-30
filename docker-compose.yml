@@ -43,8 +43,89 @@ services:
     <<: *default-logging
 
 
+  # --- TEAM FACTURATIE ---
+  billing_app:
+    image: ghcr.io/integration-project-2026-groep-2/facturatie:latest-dev
+    container_name: billing_app
+    env_file: ./billing/.env
+
+    environment:
+      - DB_HOST=billing_db
+      - RABBITMQ_HOST=rabbitmq # Verwijst naar de Infra RabbitMQ
+      - RABBITMQ_USER=${RABBITMQ_USER} # Zorg dat hun code deze variabelen uit jullie .env gebruikt:
+      - RABBITMQ_PASS=${RABBITMQ_PASS}
+    networks:
+      - rabbitmq_net
+      - billing_net
+    <<: *default-logging
+
+  billing_db:
+    image: mariadb:11.8
+    container_name: billing_db
+    ports:
+      - "3307:3306"
+    environment:
+      MARIADB_DATABASE: ${BILLING_DB_NAME}
+      MARIADB_ROOT_PASSWORD: ${BILLING_DB_ROOT_PASS}
+      MARIADB_USER: ${BILLING_DB_USER}
+      MARIADB_PASSWORD: ${BILLING_DB_PASS}
+    volumes:
+      - billing_db_data:/var/lib/mysql
+    networks:
+      - billing_net
+    <<: *default-logging
+
+
+  # --- TEAM MAILING ---
+  mailing_app:
+    image: ghcr.io/integration-project-2026-groep-2/mailing:latest-dev
+    container_name: mailing_app
+    env_file: ./mailing/.env
+    ports:
+      - "${MAILING_APP_PORT:-3000}:3000"
+    depends_on:
+      mailing_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+    environment:
+      - DB_HOST=mailing_db
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASS}
+    networks:
+      - rabbitmq_net
+      - mailing_net
+    restart: unless-stopped
+    <<: *default-logging
+
+  mailing_db:
+    image: mariadb:11.8
+    container_name: mailing_db
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MAILING_DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${MAILING_DB_NAME}
+      MARIADB_USER: ${MAILING_DB_USER}
+      MARIADB_PASSWORD: ${MAILING_DB_PASS}
+    ports:
+      - "${MAILING_DB_EXPOSE_PORT:-3308}:3306"
+    volumes:
+      - mailing_db_data:/var/lib/mysql
+      - ./mailing/docker/db/init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - mailing_net
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 25s
+    restart: unless-stopped
+    <<: *default-logging
+
+
   # --- TEAM KASSA  ---
-# database (kassa)
+  # database (kassa)
   kassa_db:
     image: postgres:18-alpine
     container_name: infra_postgres_kassa
@@ -57,6 +138,7 @@ services:
     networks:
       - rabbitmq_net
     <<: *default-logging
+
 
   # --- TEAM KASSA  ---
   kassa:
@@ -80,9 +162,6 @@ services:
       - rabbitmq_net
 
 
-
-    
-    
 # --- TEAM CRM  ---
   crm:
     image: ghcr.io/integration-project-2026-groep-2/crm:latest-dev
@@ -189,8 +268,9 @@ volumes:
   rabbitmq_data:
   rabbitmq_logs:
   nginx_logs:
+  billing_db_data: # Volume voor de facturatie database
+  mailing_db_data: # volume toegevoegd voor Mailing data
   postgres_data_planning:
-
   postgres_data_kassa:
   # Frontend
   drupal_modules:
@@ -201,4 +281,8 @@ volumes:
 
 networks:
   rabbitmq_net:
+    driver: bridge
+  billing_net:
+    driver: bridge
+  mailing_net:
     driver: bridge
