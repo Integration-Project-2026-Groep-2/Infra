@@ -114,6 +114,7 @@ services:
   billing_db:
     image: mariadb:11.8
     container_name: billing_db
+    env_file: ./billing/.env
     ports:
       - "3307:3306"
     environment:
@@ -154,6 +155,7 @@ services:
   mailing_db:
     image: mariadb:11.8
     container_name: mailing_db
+    env_file: ./mailing/.env
     environment:
       MARIADB_ROOT_PASSWORD: ${MAILING_DB_ROOT_PASSWORD}
       MARIADB_DATABASE: ${MAILING_DB_NAME}
