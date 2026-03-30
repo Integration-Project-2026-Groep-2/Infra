@@ -282,9 +282,10 @@ services:
     image: postgres:17-alpine
     container_name: infra_postgres_planning
     restart: unless-stopped
+    env_file: ./planning/.env
     environment:
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_USER=${PLANNING_DB_USER}
+      - POSTGRES_PASSWORD=${PLANNING_DB_PASSWORD}
       - POSTGRES_DB=planning_db
     volumes:
       - postgres_data_planning:/var/lib/postgresql/data
@@ -306,6 +307,7 @@ services:
         condition: service_healthy
       planning_db:
         condition: service_healthy
+    env_file: ./planning/.env
     environment:
       - PORT=3000
       - DB_HOST=${PLANNING_DB_HOST}
