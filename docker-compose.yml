@@ -197,6 +197,11 @@ services:
       - postgres_data_kassa:/var/lib/postgresql/data
     networks:
       - rabbitmq_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PLANNING_DB_USER} -d planning_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     <<: *default-logging
 
   odoo:
