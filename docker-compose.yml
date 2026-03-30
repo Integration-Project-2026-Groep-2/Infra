@@ -221,7 +221,7 @@ services:
       - odoo_web_data_kassa:/var/lib/odoo
       # Optional if you want to mount local custom Odoo modules:
       # - ./odoo/addons:/mnt/extra-addons
-    network:
+    networks:
       - kassa-network
     healthcheck:
       test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8069').read()\""]
