@@ -298,6 +298,8 @@ services:
       - drupal_sites:/var/www/html/sites
     networks:
       - nginx
+      - rabbitmq_net
+      - frontend-network
 
   frontend_db:
     image: mariadb:12
@@ -318,6 +320,7 @@ services:
       - frontend_db_data:/var/lib/mysql
     networks:
       - rabbitmq_net
+      - frontend-network
     <<: *default-logging
 
 
@@ -333,8 +336,6 @@ services:
       - POSTGRES_DB=planning_db
     volumes:
       - postgres_data_planning:/var/lib/postgresql/data
-    networks:
-      - rabbitmq_net
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${PLANNING_DB_USER} -d planning_db"]
       interval: 10s
@@ -391,6 +392,8 @@ networks:
   controlroom-network:
     driver: bridge
   kassa-network:
+    driver: bridge
+  frontend-network:
     driver: bridge
   billing_net:
     driver: bridge
