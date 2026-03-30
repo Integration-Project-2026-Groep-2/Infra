@@ -188,7 +188,7 @@ services:
   # database (kassa)
   kassa_db:
     image: postgres:18-alpine
-    container_name: infra_postgres_kassa
+    container_name: kassa_db
     restart: unless-stopped
     environment:
       - POSTGRES_USER=${KASSA_DB_USER}
