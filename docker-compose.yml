@@ -193,6 +193,28 @@ services:
       - rabbitmq_net
     <<: *default-logging
 
+  odoo:
+    image: odoo:18.0
+    container_name: kassa_odoo
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      HOST: db
+      USER: odoo
+      PASSWORD: odoo
+    ports:
+      - "8069:8069"
+    volumes:
+      - odoo_web_data_kassa:/var/lib/odoo
+      # Optional if you want to mount local custom Odoo modules:
+      # - ./odoo/addons:/mnt/extra-addons
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8069').read()\""]
+      interval: 20s
+      timeout: 10s
+      retries: 10
 
   # --- TEAM KASSA  ---
   kassa:
@@ -329,7 +351,9 @@ volumes:
   billing_db_data: # Volume voor de facturatie database
   mailing_db_data: # volume toegevoegd voor Mailing data
   postgres_data_planning:
+  # Kassa
   postgres_data_kassa:
+  odoo_web_data_kassa:
   # Frontend
   drupal_modules:
   drupal_profiles:
