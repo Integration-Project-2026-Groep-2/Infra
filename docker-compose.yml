@@ -191,8 +191,8 @@ services:
     container_name: infra_postgres_kassa
     restart: unless-stopped
     environment:
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_USER=${KASSA_DB_USER}
+      - POSTGRES_PASSWORD=${KASSA_DB_PASSWORD}
     volumes:
       - postgres_data_kassa:/var/lib/postgresql/data
     networks:
