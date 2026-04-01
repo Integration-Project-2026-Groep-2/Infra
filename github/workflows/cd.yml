@@ -1,4 +1,4 @@
-name: CI/CD Dev
+name: Build & Deploy Image to Dev
 
 on:
   push:
@@ -9,18 +9,11 @@ env:
   IMAGE: ghcr.io/integration-project-2026-groep-2/infra
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run tests
-        run: |
-          echo "Running tests..."
-          # Add your test commands here, e.g., npm test, pytest, etc.
-
   build-and-push:
-    needs: test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
 
@@ -50,7 +43,7 @@ jobs:
       - name: Deploy to Dev
         uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          host: ${{ secrets.DEV_HOST }}
+          username: ${{ secrets.DEV_USER }}
+          key: ${{ secrets.DEV_SSH_KEY }}
           script: ${{ env.SERVICE_NAME }}
