@@ -79,9 +79,7 @@ jobs:
           host: ${{ secrets.PROD_HOST }}
           username: ${{ secrets.PROD_USER }}
           key: ${{ secrets.PROD_SSH_KEY }}
-          script: |
-            docker pull ${{ env.IMAGE }}:latest
-            docker compose -f ~/infra/docker-compose.yml up -d
+          script: ${{ env.SERVICE_NAME }}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
