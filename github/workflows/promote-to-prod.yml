@@ -46,7 +46,8 @@ jobs:
               echo "SHA=${SHA}"                           >> $GITHUB_ENV
             fi
             if [ -n "${{ inputs.version }}" ]; then
-              echo "VERSION_TAG=${{ inputs.version }}"    >> $GITHUB_ENV
+              VERSION=${{ inputs.version }}
+              echo "VERSION_TAG=${VERSION#v}"    >> $GITHUB_ENV
             else
               echo "VERSION_TAG=release-${SHA}"           >> $GITHUB_ENV
             fi
