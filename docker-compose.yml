@@ -289,7 +289,7 @@ services:
  
 # --- TEAM FRONTEND ---
   frontend_drupal:
-    image: drupal:11-apache
+    image: ghcr.io/integration-project-2026-groep-2/frontend:latest-dev
     container_name: frontend_drupal
     restart: unless-stopped
     depends_on:
@@ -300,6 +300,9 @@ services:
       - DRUPAL_DB_NAME=${FRONTEND_DB_NAME}
       - DRUPAL_DB_USER=${FRONTEND_DB_USER}
       - DRUPAL_DB_PASS=${FRONTEND_DB_PASS}
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASS=${RABBITMQ_PASS}
     volumes:
       - drupal_modules:/var/www/html/modules
       - drupal_profiles:/var/www/html/profiles
@@ -331,23 +334,7 @@ services:
       - rabbitmq_net
       - frontend-network
     <<: *default-logging
-  
-  frontend:
-    image: ghcr.io/integration-project-2026-groep-2/frontend:latest-dev
-    container_name: frontend
-    restart: unless-stopped
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-    environment:
-      - RABBITMQ_HOST=rabbitmq
-      - RABBITMQ_USER=${RABBITMQ_USER}
-      - RABBITMQ_PASS=${RABBITMQ_PASS}
-    networks:
-      - rabbitmq_net
-      - frontend-network
-    <<: *default-logging
-
+    
 
   # --- TEAM PLANNING ---
   planning_db:
