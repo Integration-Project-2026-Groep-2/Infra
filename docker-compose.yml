@@ -331,6 +331,22 @@ services:
       - rabbitmq_net
       - frontend-network
     <<: *default-logging
+  
+  frontend:
+    image: ghcr.io/integration-project-2026-groep-2/frontend:latest-dev
+    container_name: frontend
+    restart: unless-stopped
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASS=${RABBITMQ_PASS}
+    networks:
+      - rabbitmq_net
+      - frontend-network
+    <<: *default-logging
 
 
   # --- TEAM PLANNING ---
