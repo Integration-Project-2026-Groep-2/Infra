@@ -304,7 +304,6 @@ services:
       - RABBITMQ_USER=${RABBITMQ_USER}
       - RABBITMQ_PASS=${RABBITMQ_PASS}
     volumes:
-      - drupal_modules:/var/www/html/modules
       - drupal_profiles:/var/www/html/profiles
       - drupal_themes:/var/www/html/themes
       - drupal_sites:/var/www/html/sites
