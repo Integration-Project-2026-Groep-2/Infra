@@ -218,30 +218,30 @@ services:
       retries: 5
     <<: *default-logging
 
-  odoo:
-    image: odoo:18.0
-    container_name: kassa_odoo
-    restart: unless-stopped
-    depends_on:
-      kassa_db:
-        condition: service_healthy
-    environment:
-      HOST: kassa_db
-      USER: ${KASSA_DB_USER}
-      PASSWORD: ${KASSA_DB_PASSWORD}
-    ports:
-      - "8069:8069"
-    volumes:
-      - odoo_web_data_kassa:/var/lib/odoo
-      # Optional if you want to mount local custom Odoo modules:
-      # - ./odoo/addons:/mnt/extra-addons
-    networks:
-      - kassa-network
-    healthcheck:
-      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8069').read()\""]
-      interval: 20s
-      timeout: 10s
-      retries: 10
+  #odoo:
+    #image: odoo:18.0
+    #container_name: kassa_odoo
+    #restart: unless-stopped
+    #depends_on:
+      #kassa_db:
+        #condition: service_healthy
+    #environment:
+      #HOST: kassa_db
+      #USER: ${KASSA_DB_USER}
+      #PASSWORD: ${KASSA_DB_PASSWORD}
+    #ports:
+      #- "8069:8069"
+    #volumes:
+      #- odoo_web_data_kassa:/var/lib/odoo
+      ## Optional if you want to mount local custom Odoo modules:
+      ## - ./odoo/addons:/mnt/extra-addons
+    #networks:
+      #- kassa-network
+    #healthcheck:
+      #test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8069').read()\""]
+      #interval: 20s
+      #timeout: 10s
+      #retries: 10
 
   # --- TEAM KASSA  ---
   kassa:
@@ -249,21 +249,45 @@ services:
     container_name: kassa_service
     restart: unless-stopped
     depends_on:
+      kassa_db:
+        condition: service_healthy
       rabbitmq:
         condition: service_healthy
     environment:
-      - RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672/
+      - SYSTEM_NAME=Kassa
+      - ODOO_PORT=8069
       - ODOO_URL=${ODOO_URL}
       - ODOO_DATABASE=${ODOO_DB}
       - ODOO_USERNAME=${ODOO_USERNAME}
       - ODOO_PASSWORD=${ODOO_PASSWORD}
-      - SYSTEM_NAME=Kassa
-      - HEARTBEAT_INTERVAL=1
+      - DB_HOST=kassa_db
+      - DB_PORT=5432
+      - POSTGRES_DB=kassa_db
+      - POSTGRES_USER=${KASSA_DB_USER}
+      - POSTGRES_PASSWORD=${KASSA_DB_PASSWORD}
+      - RABBIT_HOST=rabbitmq
+      - RABBIT_PORT=5672
+      - RABBIT_USER=${RABBITMQ_USER}
+      - RABBIT_PASSWORD=${RABBITMQ_PASS}
+      - RABBIT_VHOST=${RABBITMQ_VHOST}
+      - HEARTBEAT_INTERVAL_SECONDS=1
+      - HEARTBEAT_EXCHANGE=heartbeat.direct
+      - HEARTBEAT_ROUTING_KEY=routing.heartbeat
       - STATUS_CHECK_INTERVAL=30
       - LOG_LEVEL=INFO
+    ports:
+      - "8069:8069"
+    volumes:
+      - odoo_web_data_kassa:/var/lib/odoo
     networks:
+      - nginx 
       - rabbitmq_net
       - kassa-network
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8069').read()\""]
+      interval: 20s
+      timeout: 10s
+      retries: 10
     <<: *default-logging
 
 
