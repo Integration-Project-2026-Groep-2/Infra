@@ -280,6 +280,7 @@ services:
     volumes:
       - odoo_web_data_kassa:/var/lib/odoo
     networks:
+      - nginx 
       - rabbitmq_net
       - kassa-network
     healthcheck:
