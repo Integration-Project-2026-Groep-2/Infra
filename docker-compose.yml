@@ -280,8 +280,6 @@ services:
       - HEARTBEAT_ROUTING_KEY=routing.heartbeat
       - STATUS_CHECK_INTERVAL=30
       - LOG_LEVEL=INFO
-    ports:
-      - "8069:8069"
     volumes:
       - odoo_web_data_kassa:/var/lib/odoo
     networks:
