@@ -291,7 +291,6 @@ services:
       interval: 20s
       timeout: 10s
       retries: 10
-    command: odoo --proxy-mode
     <<: *default-logging
 
 
