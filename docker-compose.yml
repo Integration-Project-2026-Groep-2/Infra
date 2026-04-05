@@ -269,6 +269,7 @@ services:
       - POSTGRES_DB=kassa_db
       - POSTGRES_USER=${KASSA_DB_USER}
       - POSTGRES_PASSWORD=${KASSA_DB_PASSWORD}
+      # RabbitMQ
       - RABBIT_HOST=rabbitmq
       - RABBIT_PORT=5672
       - RABBIT_USER=${RABBITMQ_USER}
