@@ -260,11 +260,16 @@ services:
       - ODOO_DATABASE=${ODOO_DB}
       - ODOO_USERNAME=${ODOO_USERNAME}
       - ODOO_PASSWORD=${ODOO_PASSWORD}
+      # DB env
+      - HOST=kassa_db
+      - USER=${KASSA_DB_USER}
+      - PASSWORD=${KASSA_DB_PASSWORD}
       - DB_HOST=kassa_db
       - DB_PORT=5432
       - POSTGRES_DB=kassa_db
       - POSTGRES_USER=${KASSA_DB_USER}
       - POSTGRES_PASSWORD=${KASSA_DB_PASSWORD}
+      # RabbitMQ
       - RABBIT_HOST=rabbitmq
       - RABBIT_PORT=5672
       - RABBIT_USER=${RABBITMQ_USER}
