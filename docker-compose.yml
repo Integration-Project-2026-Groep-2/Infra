@@ -111,6 +111,8 @@ services:
       - RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672/
       - RABBITMQ_HOST=rabbitmq
       - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - CONTROLROOM_ES_USER=${CONTROLROOM_ES_USER}
+      - CONTROLROOM_ES_PASS=${CONTROLROOM_ES_PASS}
     networks:
       - controlroom-network
       - rabbitmq_net # Toegevoegd zodat deze container RabbitMQ kan vinden op hostname 'rabbitmq'
