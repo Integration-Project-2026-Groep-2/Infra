@@ -65,8 +65,9 @@ services:
     container_name: elasticsearch
     restart: unless-stopped
     environment:
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - discovery.type=single-node
-      - xpack.security.enabled=false
+      - xpack.security.enabled=true
       - ES_JAVA_OPTS=-Xms1g -Xmx1g
     ports:
       - "${PORT_ELASTICSEARCH}:9200"
@@ -87,6 +88,8 @@ services:
     restart: unless-stopped
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=${KIBANA_USERNAME}
+      - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
       - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=${KIBANA_ENCRYPTION_KEY}
     ports:
       - "${PORT_KIBANA}:5601"
@@ -106,6 +109,7 @@ services:
       - rabbitmq
     environment:
       - RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672/
+      - RABBITMQ_HOST=rabbitmq
       - ELASTICSEARCH_URL=http://elasticsearch:9200
     networks:
       - controlroom-network
