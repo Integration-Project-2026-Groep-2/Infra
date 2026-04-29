@@ -105,7 +105,7 @@ services:
 
   controlroom:
     image: ghcr.io/integration-project-2026-groep-2/controlroom:latest-dev
-    container_name: controlroom-app
+    container_name: controlroom
     depends_on:
       - elasticsearch
       - rabbitmq
@@ -126,7 +126,7 @@ services:
   # --- TEAM FACTURATIE ---
   billing:
     image: ghcr.io/integration-project-2026-groep-2/facturatie:latest-dev
-    container_name: billing-app
+    container_name: billing
     env_file: ./billing/.env
 
     environment:
@@ -161,7 +161,7 @@ services:
   # --- TEAM MAILING ---
   mailing:
     image: ghcr.io/integration-project-2026-groep-2/mailing:latest-dev
-    container_name: mailing-app
+    container_name: mailing
     env_file: ./mailing/.env
     ports:
       - "${MAILING_APP_PORT:-3000}:3000"
@@ -230,7 +230,7 @@ services:
 
   kassa:
     image: ghcr.io/integration-project-2026-groep-2/kassa:latest-dev
-    container_name: kassa-app
+    container_name: kassa
     depends_on:
       kassa-db:
         condition: service_healthy
@@ -277,7 +277,7 @@ services:
 # --- TEAM CRM  ---
   crm:
     image: ghcr.io/integration-project-2026-groep-2/crm:latest-dev
-    container_name: crm-app
+    container_name: crm
     restart: unless-stopped
     depends_on:
       rabbitmq:
@@ -297,7 +297,7 @@ services:
 # --- TEAM FRONTEND ---
   frontend:
     image: ghcr.io/integration-project-2026-groep-2/frontend:latest-dev
-    container_name: frontend-app
+    container_name: frontend
     restart: unless-stopped
     depends_on:
       frontend-db:
@@ -364,7 +364,7 @@ services:
 
   planning:
     image: ghcr.io/integration-project-2026-groep-2/planning:latest-dev
-    container_name: planning-app
+    container_name: planning
     depends_on:
       rabbitmq:
         condition: service_healthy
