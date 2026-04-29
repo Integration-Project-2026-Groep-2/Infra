@@ -120,6 +120,8 @@ services:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
       - CONTROLROOM_ES_USER=${CONTROLROOM_ES_USER}
       - CONTROLROOM_ES_PASS=${CONTROLROOM_ES_PASS}
+      - TEAMS_WEBHOOK_URL=${TEAMS_WEBHOOK_URL}
+      - MONITORED_SERVICES=${MONITORED_SERVICES}
     networks:
       - controlroom-net
       - rabbitmq-controlroom
@@ -261,6 +263,10 @@ services:
       - HEARTBEAT_ROUTING_KEY=routing.heartbeat
       - STATUS_CHECK_INTERVAL=30
       - LOG_LEVEL=INFO
+      # User CRUD
+      - USER_EVENTS_EXCHANGE=user.topic
+      - USER_EVENTS_EXCHANGE_TYPE=topic
+      - USER_EVENTS_RETRY_TTL_MS=15000
     volumes:
       - odoo_web_data_kassa:/var/lib/odoo
     networks:
