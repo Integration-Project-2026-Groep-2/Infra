@@ -219,7 +219,7 @@ services:
     networks:
       - kassa-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${PLANNING_DB_USER} -d planning_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${KASSA_DB_USER} -d kassa-db"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -242,11 +242,8 @@ services:
       - ODOO_PASSWORD=${ODOO_PASSWORD}
       # DB env
       - HOST=kassa-db
-      - USER=${KASSA_DB_USER}
-      - PASSWORD=${KASSA_DB_PASSWORD}
       - DB_HOST=kassa-db
-      - DB_PORT=5432
-      - POSTGRES_DB=kassa_db
+      - POSTGRES_DB=kassa-db
       - POSTGRES_USER=${KASSA_DB_USER}
       - POSTGRES_PASSWORD=${KASSA_DB_PASSWORD}
       # RabbitMQ
@@ -345,17 +342,19 @@ services:
   # --- TEAM PLANNING ---
   planning-db:
     image: postgres:17-alpine
-    container_name: infra_postgres_planning
+    container_name: planning-db # Was: infra_postgres_planning
     restart: unless-stopped
     env_file: ./planning/.env
     environment:
       - POSTGRES_USER=${PLANNING_DB_USER}
       - POSTGRES_PASSWORD=${PLANNING_DB_PASSWORD}
-      - POSTGRES_DB=planning_db
+      - POSTGRES_DB=planning-db
+    networks:
+      - planning-net # Toegevoegd voor consistentie
     volumes:
       - postgres_data_planning:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${PLANNING_DB_USER} -d planning_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${PLANNING_DB_USER} -d planning-db"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -371,7 +370,7 @@ services:
     env_file: ./planning/.env
     environment:
       - PORT=3000
-      - DB_HOST=${PLANNING_DB_HOST}
+      - DB_HOST=planning-db
       - DB_PORT=5432
       - DB_NAME=${PLANNING_DB_NAME}
       - DB_USER=${PLANNING_DB_USER}
