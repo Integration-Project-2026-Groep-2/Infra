@@ -9,7 +9,7 @@ services:
   # --- TEAM INFRA ---
   rabbitmq:
     image: rabbitmq:4-management
-    container_name: rabbitmq_management
+    container_name: rabbitmq-management
     hostname: rabbitmq
     restart: unless-stopped
     environment:
@@ -214,6 +214,7 @@ services:
     environment:
       - POSTGRES_USER=${KASSA_DB_USER}
       - POSTGRES_PASSWORD=${KASSA_DB_PASSWORD}
+      - POSTGRES_DB=kassa-db
     volumes:
       - postgres_data_kassa:/var/lib/postgresql/data
     networks:
