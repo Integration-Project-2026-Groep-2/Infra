@@ -1,21 +1,16 @@
 #!/bin/bash
+# Create users for each service
+rabbitmqctl add_user crm_user ${CRM_RABBIT_PASS}
+rabbitmqctl add_user billing_user ${BILLING_RABBIT_PASS}
+rabbitmqctl add_user mailing_user ${MAILING_RABBIT_PASS}
+rabbitmqctl add_user kassa_user ${KASSA_RABBIT_PASS}
+rabbitmqctl add_user frontend_user ${FRONTEND_RABBIT_PASS}
+rabbitmqctl add_user planning_user ${PLANNING_RABBIT_PASS}
 
-# Function to create user and set permissions
-create_service_user() {
-    local username=$1
-    local password=$2
-    if [ -n "$username" ] && [ -n "$password" ]; then
-        rabbitmqctl add_user "$username" "$password"
-        rabbitmqctl set_permissions -p / "$username" ".*" ".*" ".*"
-        echo "Created user: $username"
-    fi
-}
-
-# Execute creation for all services
-create_service_user "$RABBITMQ_USER_CONTROLROOM" "$RABBITMQ_PASS_CONTROLROOM"
-create_service_user "$RABBITMQ_USER_BILLING" "$RABBITMQ_PASS_BILLING"
-create_service_user "$RABBITMQ_USER_MAILING" "$RABBITMQ_PASS_MAILING"
-create_service_user "$RABBITMQ_USER_KASSA" "$RABBITMQ_PASS_KASSA"
-create_service_user "$RABBITMQ_USER_CRM" "$RABBITMQ_PASS_CRM"
-create_service_user "$RABBITMQ_USER_FRONTEND" "$RABBITMQ_PASS_FRONTEND"
-create_service_user "$RABBITMQ_USER_PLANNING" "$RABBITMQ_PASS_PLANNING"
+# Set permissions (vhost is often "/")
+rabbitmqctl set_permissions -p / crm_user ".*" ".*" ".*"
+rabbitmqctl set_permissions -p / billing_user ".*" ".*" ".*"
+rabbitmqctl set_permissions -p / mailing_user ".*" ".*" ".*"
+rabbitmqctl set_permissions -p / kassa_user ".*" ".*" ".*"
+rabbitmqctl set_permissions -p / frontend_user ".*" ".*" ".*"
+rabbitmqctl set_permissions -p / planning_user ".*" ".*" ".*"
