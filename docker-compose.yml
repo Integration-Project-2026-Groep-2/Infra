@@ -431,17 +431,20 @@ volumes:
   frontend_db_data:
 
 networks:
-  rabbitmq_net:
-    driver: bridge
-  nginx:
-    driver: bridge
-  controlroom-network:
-    driver: bridge
-  kassa-network:
-    driver: bridge
-  frontend-network:
-    driver: bridge
-  billing_net:
-    driver: bridge
-  mailing_net:
-    driver: bridge
+  # RabbitMQ Hub-networks (één per team)
+  rabbitmq-kassa:
+  rabbitmq-frontend:
+  rabbitmq-facturatie:
+  rabbitmq-mailing:
+  rabbitmq-planning:
+  rabbitmq-controlroom:
+  rabbitmq-crm:
+
+  # Bestaande netwerken voor interne team-communicatie en de proxy
+  nginx-net:
+  kassa-net:
+  frontend-net:
+  facturatie-net:
+  mailing-net:
+  planning-net:
+  controlroom-net:
