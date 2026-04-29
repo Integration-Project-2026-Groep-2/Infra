@@ -37,7 +37,7 @@ services:
     restart: unless-stopped
     depends_on:
       - rabbitmq
-      - frontend-drupal
+      - frontend
       - kibana
     ports:
       - "30098:30098"
@@ -122,7 +122,7 @@ services:
     
     
   # --- TEAM FACTURATIE ---
-  billing-app:
+  billing:
     image: ghcr.io/integration-project-2026-groep-2/facturatie:latest-dev
     container_name: billing-app
     env_file: ./billing/.env
@@ -157,7 +157,7 @@ services:
 
 
   # --- TEAM MAILING ---
-  mailing-app:
+  mailing:
     image: ghcr.io/integration-project-2026-groep-2/mailing:latest-dev
     container_name: mailing-app
     env_file: ./mailing/.env
@@ -226,7 +226,7 @@ services:
       retries: 5
     <<: *default-logging
 
-  kassa-app:
+  kassa:
     image: ghcr.io/integration-project-2026-groep-2/kassa:latest-dev
     container_name: kassa-app
     depends_on:
@@ -293,7 +293,7 @@ services:
     
  
 # --- TEAM FRONTEND ---
-  frontend-drupal:
+  frontend:
     image: ghcr.io/integration-project-2026-groep-2/frontend:latest-dev
     container_name: frontend-app
     restart: unless-stopped
@@ -360,7 +360,7 @@ services:
       timeout: 5s
       retries: 5
 
-  planning-app:
+  planning:
     image: ghcr.io/integration-project-2026-groep-2/planning:latest-dev
     container_name: planning-app
     depends_on:
