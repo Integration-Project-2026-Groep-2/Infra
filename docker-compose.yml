@@ -21,6 +21,7 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
       - rabbitmq_logs:/var/log/rabbitmq
+      - ./rabbitmq/init.sh:/docker-entrypoint-initdb.d/init.sh:ro
     networks:
       - rabbitmq_net
     healthcheck:
@@ -110,7 +111,7 @@ services:
       - elasticsearch
       - rabbitmq
     environment:
-      - RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672/
+      - RABBITMQ_URL=amqp://${CONTROLROOM_RABBITMQ_USER}:${CONTROLROOM_RABBITMQ_PASS}@rabbitmq:5672/
       - RABBITMQ_HOST=rabbitmq
       - ELASTICSEARCH_URL=http://elasticsearch:9200
       - CONTROLROOM_ES_USER=${CONTROLROOM_ES_USER}
@@ -132,8 +133,8 @@ services:
     environment:
       - DB_HOST=billing_db
       - RABBITMQ_HOST=rabbitmq # Verwijst naar de Infra RabbitMQ
-      - RABBITMQ_USER=${RABBITMQ_USER} # Zorg dat hun code deze variabelen uit jullie .env gebruikt:
-      - RABBITMQ_PASS=${RABBITMQ_PASS}
+      - RABBITMQ_USER=${BILLING_RABBITMQ_USER} # Zorg dat hun code deze variabelen uit jullie .env gebruikt:
+      - RABBITMQ_PASS=${BILLING_RABBITMQ_PASS}
     networks:
       - rabbitmq_net
       - billing_net
@@ -173,8 +174,8 @@ services:
     environment:
       - DB_HOST=mailing_db
       - RABBITMQ_HOST=rabbitmq
-      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
-      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASS}
+      - RABBITMQ_DEFAULT_USER=${MAILING_APP_RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${MAILING_APP_RABBITMQ_PASS}
     networks:
       - rabbitmq_net
       - mailing_net
@@ -229,31 +230,6 @@ services:
       retries: 5
     <<: *default-logging
 
-  #odoo:
-    #image: odoo:18.0
-    #container_name: kassa_odoo
-    #restart: unless-stopped
-    #depends_on:
-      #kassa_db:
-        #condition: service_healthy
-    #environment:
-      #HOST: kassa_db
-      #USER: ${KASSA_DB_USER}
-      #PASSWORD: ${KASSA_DB_PASSWORD}
-    #ports:
-      #- "8069:8069"
-    #volumes:
-      #- odoo_web_data_kassa:/var/lib/odoo
-      ## Optional if you want to mount local custom Odoo modules:
-      ## - ./odoo/addons:/mnt/extra-addons
-    #networks:
-      #- kassa-network
-    #healthcheck:
-      #test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8069').read()\""]
-      #interval: 20s
-      #timeout: 10s
-      #retries: 10
-
   # --- TEAM KASSA  ---
   kassa:
     image: ghcr.io/integration-project-2026-groep-2/kassa:latest-dev
@@ -283,8 +259,8 @@ services:
       # RabbitMQ
       - RABBIT_HOST=rabbitmq
       - RABBIT_PORT=5672
-      - RABBIT_USER=${RABBITMQ_USER}
-      - RABBIT_PASSWORD=${RABBITMQ_PASS}
+      - RABBIT_USER=${KASSA_RABBITMQ_USER}
+      - RABBIT_PASSWORD=${KASSA_RABBITMQ_PASS}
       - RABBIT_VHOST=${RABBITMQ_VHOST}
       - HEARTBEAT_INTERVAL_SECONDS=1
       - HEARTBEAT_EXCHANGE=heartbeat.direct
@@ -318,7 +294,7 @@ services:
       rabbitmq:
         condition: service_healthy
     environment:
-      - RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672/
+      - RABBITMQ_URL=amqp://${CRM_RABBITMQ_USER}:${CRM_RABBITMQ_PASS}@rabbitmq:5672/
       - SALESFORCE_USERNAME=${SF_USER}
       - SALESFORCE_PASSWORD=${SF_PASS}
       - SALESFORCE_SECURITY_TOKEN=${SF_TOKEN}
@@ -343,8 +319,8 @@ services:
       - DRUPAL_DB_USER=${FRONTEND_DB_USER}
       - DRUPAL_DB_PASS=${FRONTEND_DB_PASS}
       - RABBITMQ_HOST=rabbitmq
-      - RABBITMQ_USER=${RABBITMQ_USER}
-      - RABBITMQ_PASS=${RABBITMQ_PASS}
+      - RABBITMQ_USER=${FRONTEND_DRUPAL_RABBITMQ_USER}
+      - RABBITMQ_PASS=${FRONTEND_DRUPAL_RABBITMQ_PASS}
     volumes:
       - drupal_profiles:/var/www/html/profiles
       - drupal_themes:/var/www/html/themes
@@ -413,7 +389,7 @@ services:
       - DB_NAME=${PLANNING_DB_NAME}
       - DB_USER=${PLANNING_DB_USER}
       - DB_PASSWORD=${PLANNING_DB_PASSWORD}
-      - RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672
+      - RABBITMQ_URL=amqp://${PLANNING_RABBITMQ_USER}:${PLANNING_RABBITMQ_PASS}@rabbitmq:5672
     networks:
       - rabbitmq_net
 
