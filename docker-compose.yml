@@ -291,6 +291,10 @@ services:
       - HEARTBEAT_ROUTING_KEY=routing.heartbeat
       - STATUS_CHECK_INTERVAL=30
       - LOG_LEVEL=INFO
+      # User CRUD
+      - USER_EVENTS_EXCHANGE=user.topic
+      - USER_EVENTS_EXCHANGE_TYPE=topic
+      - USER_EVENTS_RETRY_TTL_MS=15000
     volumes:
       - odoo_web_data_kassa:/var/lib/odoo
     networks:
