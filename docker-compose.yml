@@ -229,31 +229,6 @@ services:
       retries: 5
     <<: *default-logging
 
-  #odoo:
-    #image: odoo:18.0
-    #container_name: kassa_odoo
-    #restart: unless-stopped
-    #depends_on:
-      #kassa_db:
-        #condition: service_healthy
-    #environment:
-      #HOST: kassa_db
-      #USER: ${KASSA_DB_USER}
-      #PASSWORD: ${KASSA_DB_PASSWORD}
-    #ports:
-      #- "8069:8069"
-    #volumes:
-      #- odoo_web_data_kassa:/var/lib/odoo
-      ## Optional if you want to mount local custom Odoo modules:
-      ## - ./odoo/addons:/mnt/extra-addons
-    #networks:
-      #- kassa-network
-    #healthcheck:
-      #test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8069').read()\""]
-      #interval: 20s
-      #timeout: 10s
-      #retries: 10
-
   # --- TEAM KASSA  ---
   kassa:
     image: ghcr.io/integration-project-2026-groep-2/kassa:latest-dev
