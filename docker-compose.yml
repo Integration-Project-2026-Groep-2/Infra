@@ -215,7 +215,7 @@ services:
     environment:
       - POSTGRES_USER=${KASSA_DB_USER}
       - POSTGRES_PASSWORD=${KASSA_DB_PASSWORD}
-      - POSTGRESS_DB=kassa_db
+      - POSTGRES_DB=kassa_db
     volumes:
       - postgres_data_kassa:/var/lib/postgresql/data
     networks:
