@@ -22,7 +22,7 @@ services:
       - rabbitmq_data:/var/lib/rabbitmq
       - rabbitmq_logs:/var/log/rabbitmq
     networks:
-      - rabbitmq_net
+      - rabbitmq-net
     healthcheck:
       test: ["CMD-SHELL", "rabbitmq-diagnostics -q check_running && rabbitmq-diagnostics -q check_local_alarms"]
       interval: 10s
@@ -33,11 +33,11 @@ services:
 
   nginx:
     image: nginx:stable
-    container_name: rabbitmq-proxy
+    container_name: nginx-proxy
     restart: unless-stopped
     depends_on:
       - rabbitmq
-      - frontend_drupal # Wachten op de hoofdwebsite
+      - frontend-drupal
       - kibana
     ports:
       - "30098:30098"
@@ -48,8 +48,8 @@ services:
       - ./certs:/etc/nginx/certs:ro
       - nginx_logs:/var/log/nginx
     networks:
-      - rabbitmq_net
-      - nginx
+      - rabbitmq-net
+      - nginx-net
     command: |
       /bin/sh -c "
       echo \"${CONTROL_ROOM_USER}:$(openssl passwd -apr1 ${CONTROL_ROOM_PASS})\" > /etc/nginx/.htpasswd-control-room
@@ -76,7 +76,7 @@ services:
     volumes:
       - elasticsearch:/usr/share/elasticsearch/data
     networks:
-      - controlroom-network
+      - controlroom-net
     healthcheck:
       test: ["CMD-SHELL", "curl -s -u elastic:$${ELASTIC_PASSWORD} http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\\|yellow\"'"]
       interval: 10s
@@ -99,13 +99,13 @@ services:
       elasticsearch:
         condition: service_healthy
     networks:
-      - controlroom-network
-      - nginx
+      - controlroom-net
+      - nginx-net
     <<: *default-logging
 
   controlroom:
     image: ghcr.io/integration-project-2026-groep-2/controlroom:latest-dev
-    container_name: controlroom
+    container_name: controlroom-app
     depends_on:
       - elasticsearch
       - rabbitmq
@@ -116,31 +116,31 @@ services:
       - CONTROLROOM_ES_USER=${CONTROLROOM_ES_USER}
       - CONTROLROOM_ES_PASS=${CONTROLROOM_ES_PASS}
     networks:
-      - controlroom-network
-      - rabbitmq_net # Toegevoegd zodat deze container RabbitMQ kan vinden op hostname 'rabbitmq'
+      - controlroom-net
+      - rabbitmq-net
     restart: unless-stopped
     
     
   # --- TEAM FACTURATIE ---
-  billing_app:
+  billing-app:
     image: ghcr.io/integration-project-2026-groep-2/facturatie:latest-dev
-    container_name: billing_app
+    container_name: billing-app
     env_file: ./billing/.env
 
     environment:
-      - DB_HOST=billing_db
+      - DB_HOST=billing-db
       - RABBITMQ_HOST=rabbitmq # Verwijst naar de Infra RabbitMQ
       - RABBITMQ_USER=${RABBITMQ_USER} # Zorg dat hun code deze variabelen uit jullie .env gebruikt:
       - RABBITMQ_PASS=${RABBITMQ_PASS}
     networks:
-      - rabbitmq_net
-      - billing_net
-      - nginx
+      - rabbitmq-net
+      - billing-net
+      - nginx-net
     <<: *default-logging
 
-  billing_db:
+  billing-db:
     image: mariadb:11.8
-    container_name: billing_db
+    container_name: billing-db
     env_file: ./billing/.env
     ports:
       - "3307:3306"
@@ -152,37 +152,37 @@ services:
     volumes:
       - billing_db_data:/var/lib/mysql
     networks:
-      - billing_net
+      - billing-net
     <<: *default-logging
 
 
   # --- TEAM MAILING ---
-  mailing_app:
+  mailing-app:
     image: ghcr.io/integration-project-2026-groep-2/mailing:latest-dev
-    container_name: mailing_app
+    container_name: mailing-app
     env_file: ./mailing/.env
     ports:
       - "${MAILING_APP_PORT:-3000}:3000"
     depends_on:
-      mailing_db:
+      mailing-db:
         condition: service_healthy
       rabbitmq:
         condition: service_started
     environment:
-      - DB_HOST=mailing_db
+      - DB_HOST=mailing-db
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASS}
     networks:
-      - rabbitmq_net
-      - mailing_net
-      - nginx
+      - rabbitmq-net
+      - mailing-net
+      - nginx-net
     restart: unless-stopped
     <<: *default-logging
 
-  mailing_db:
+  mailing-db:
     image: mariadb:11.8
-    container_name: mailing_db
+    container_name: mailing-db
     env_file: ./mailing/.env
     environment:
       MARIADB_ROOT_PASSWORD: ${MAILING_DB_ROOT_PASSWORD}
@@ -195,7 +195,7 @@ services:
       - mailing_db_data:/var/lib/mysql
       - ./mailing/docker/db/init:/docker-entrypoint-initdb.d:ro
     networks:
-      - mailing_net
+      - mailing-net
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s
@@ -207,10 +207,9 @@ services:
 
 
   # --- TEAM KASSA  ---
-  # database (kassa)
-  kassa_db:
+  kassa-db:
     image: postgres:18-alpine
-    container_name: kassa_db
+    container_name: kassa-db
     restart: unless-stopped
     environment:
       - POSTGRES_USER=${KASSA_DB_USER}
@@ -218,7 +217,7 @@ services:
     volumes:
       - postgres_data_kassa:/var/lib/postgresql/data
     networks:
-      - kassa-network
+      - kassa-net
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${PLANNING_DB_USER} -d planning_db"]
       interval: 10s
@@ -226,38 +225,11 @@ services:
       retries: 5
     <<: *default-logging
 
-  #odoo:
-    #image: odoo:18.0
-    #container_name: kassa_odoo
-    #restart: unless-stopped
-    #depends_on:
-      #kassa_db:
-        #condition: service_healthy
-    #environment:
-      #HOST: kassa_db
-      #USER: ${KASSA_DB_USER}
-      #PASSWORD: ${KASSA_DB_PASSWORD}
-    #ports:
-      #- "8069:8069"
-    #volumes:
-      #- odoo_web_data_kassa:/var/lib/odoo
-      ## Optional if you want to mount local custom Odoo modules:
-      ## - ./odoo/addons:/mnt/extra-addons
-    #networks:
-      #- kassa-network
-    #healthcheck:
-      #test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8069').read()\""]
-      #interval: 20s
-      #timeout: 10s
-      #retries: 10
-
-  # --- TEAM KASSA  ---
-  kassa:
+  kassa-app:
     image: ghcr.io/integration-project-2026-groep-2/kassa:latest-dev
-    container_name: kassa_service
-    restart: unless-stopped
+    container_name: kassa-app
     depends_on:
-      kassa_db:
+      kassa-db:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
@@ -269,10 +241,10 @@ services:
       - ODOO_USERNAME=${ODOO_USERNAME}
       - ODOO_PASSWORD=${ODOO_PASSWORD}
       # DB env
-      - HOST=kassa_db
+      - HOST=kassa-db
       - USER=${KASSA_DB_USER}
       - PASSWORD=${KASSA_DB_PASSWORD}
-      - DB_HOST=kassa_db
+      - DB_HOST=kassa-db
       - DB_PORT=5432
       - POSTGRES_DB=kassa_db
       - POSTGRES_USER=${KASSA_DB_USER}
@@ -291,9 +263,9 @@ services:
     volumes:
       - odoo_web_data_kassa:/var/lib/odoo
     networks:
-      - nginx 
-      - rabbitmq_net
-      - kassa-network
+      - nginx-net
+      - rabbitmq-net
+      - kassa-net
     healthcheck:
       test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8069').read()\""]
       interval: 20s
@@ -305,7 +277,7 @@ services:
 # --- TEAM CRM  ---
   crm:
     image: ghcr.io/integration-project-2026-groep-2/crm:latest-dev
-    container_name: crm
+    container_name: crm-app
     restart: unless-stopped
     depends_on:
       rabbitmq:
@@ -318,20 +290,20 @@ services:
       - SALESFORCE_DOMAIN=login
       - LOG_LEVEL=INFO
     networks:
-      - rabbitmq_net
+      - rabbitmq-net
     <<: *default-logging
     
  
 # --- TEAM FRONTEND ---
-  frontend_drupal:
+  frontend-drupal:
     image: ghcr.io/integration-project-2026-groep-2/frontend:latest-dev
-    container_name: frontend_drupal
+    container_name: frontend-app
     restart: unless-stopped
     depends_on:
-      frontend_db:
+      frontend-db:
         condition: service_healthy
     environment:
-      - DRUPAL_DB_HOST=frontend_db
+      - DRUPAL_DB_HOST=frontend-db
       - DRUPAL_DB_NAME=${FRONTEND_DB_NAME}
       - DRUPAL_DB_USER=${FRONTEND_DB_USER}
       - DRUPAL_DB_PASS=${FRONTEND_DB_PASS}
@@ -343,13 +315,13 @@ services:
       - drupal_themes:/var/www/html/themes
       - drupal_sites:/var/www/html/sites
     networks:
-      - nginx
-      - rabbitmq_net
-      - frontend-network
+      - nginx-net
+      - rabbitmq-net
+      - frontend-net
 
-  frontend_db:
+  frontend-db:
     image: mariadb:12
-    container_name: frontend_db
+    container_name: frontend-db
     restart: unless-stopped
     environment:
       MARIADB_DATABASE: ${FRONTEND_DB_NAME}
@@ -365,13 +337,13 @@ services:
     volumes:
       - frontend_db_data:/var/lib/mysql
     networks:
-      - rabbitmq_net
-      - frontend-network
+      - rabbitmq-net
+      - frontend-net
     <<: *default-logging
     
 
   # --- TEAM PLANNING ---
-  planning_db:
+  planning-db:
     image: postgres:17-alpine
     container_name: infra_postgres_planning
     restart: unless-stopped
@@ -388,15 +360,13 @@ services:
       timeout: 5s
       retries: 5
 
-  # --- TEAM PLANNING ---
-  planning:
+  planning-app:
     image: ghcr.io/integration-project-2026-groep-2/planning:latest-dev
-    container_name: planning_service
-    restart: unless-stopped
+    container_name: planning-app
     depends_on:
       rabbitmq:
         condition: service_healthy
-      planning_db:
+      planning-db:
         condition: service_healthy
     env_file: ./planning/.env
     environment:
@@ -408,7 +378,8 @@ services:
       - DB_PASSWORD=${PLANNING_DB_PASSWORD}
       - RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672
     networks:
-      - rabbitmq_net
+      - rabbitmq-net
+      - planning-net
 
 # --- VOLUMES & NETWORKS ---
 volumes:
@@ -431,17 +402,19 @@ volumes:
   frontend_db_data:
 
 networks:
-  rabbitmq_net:
+  rabbitmq-net:
     driver: bridge
-  nginx:
+  nginx-net:
     driver: bridge
-  controlroom-network:
+  controlroom-net:
     driver: bridge
-  kassa-network:
+  kassa-net:
     driver: bridge
-  frontend-network:
+  frontend-net:
     driver: bridge
-  billing_net:
+  billing-net:
     driver: bridge
-  mailing_net:
+  mailing-net:
+    driver: bridge
+  planning-net:
     driver: bridge
