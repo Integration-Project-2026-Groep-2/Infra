@@ -115,6 +115,8 @@ services:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
       - CONTROLROOM_ES_USER=${CONTROLROOM_ES_USER}
       - CONTROLROOM_ES_PASS=${CONTROLROOM_ES_PASS}
+      - TEAMS_WEBHOOK_URL=${TEAMS_WEBHOOK_URL}
+      - MONITORED_SERVICES=${MONITORED_SERVICES}
     networks:
       - controlroom-net
       - rabbitmq-net
