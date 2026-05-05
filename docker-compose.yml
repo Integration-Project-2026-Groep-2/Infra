@@ -127,26 +127,26 @@ services:
     
     
   # --- TEAM FACTURATIE ---
-  billing:
+  facturatie:
     image: ghcr.io/integration-project-2026-groep-2/facturatie:latest-dev
-    container_name: billing
-    env_file: ./billing/.env
+    container_name: facturatie
+    env_file: ./facturatie/.env
 
     environment:
-      - DB_HOST=billing-db
+      - DB_HOST=facturatie-db
       - RABBITMQ_HOST=rabbitmq # Verwijst naar de Infra RabbitMQ
       - RABBITMQ_USER=${RABBITMQ_USER} # Zorg dat hun code deze variabelen uit jullie .env gebruikt:
       - RABBITMQ_PASS=${RABBITMQ_PASS}
     networks:
       - rabbitmq-net
-      - billing-net
+      - facturatie-net
       - nginx-net
     <<: *default-logging
 
-  billing-db:
+  facturatie-db:
     image: mariadb:11.8
-    container_name: billing-db
-    env_file: ./billing/.env
+    container_name: facturatie-db
+    env_file: ./facturatie/.env
     ports:
       - "3307:3306"
     environment:
@@ -155,9 +155,9 @@ services:
       MARIADB_USER: ${BILLING_DB_USER}
       MARIADB_PASSWORD: ${BILLING_DB_PASS}
     volumes:
-      - billing_db_data:/var/lib/mysql
+      - facturatie_db_data:/var/lib/mysql
     networks:
-      - billing-net
+      - facturatie-net
     <<: *default-logging
 
 
@@ -397,7 +397,7 @@ volumes:
   nginx_logs:
   # Controlroom
   elasticsearch:
-  billing_db_data: # Volume voor de facturatie database
+  facturatie_db_data: # Volume voor de facturatie database
   mailing_db_data: # volume toegevoegd voor Mailing data
   postgres_data_planning:
   # Kassa
@@ -421,7 +421,7 @@ networks:
     driver: bridge
   frontend-net:
     driver: bridge
-  billing-net:
+  facturatie-net:
     driver: bridge
   mailing-net:
     driver: bridge
