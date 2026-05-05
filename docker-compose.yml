@@ -97,7 +97,10 @@ services:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
       - ELASTICSEARCH_USERNAME=${KIBANA_USERNAME}
       - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
+      - SERVER_PUBLICBASEURL=${KIBANA_PUBLIC_URL}
       - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=${KIBANA_ENCRYPTION_KEY}
+      - XPACK_SECURITY_AUDIT_ENABLED=true
+      - XPACK_SECURITY_AUDIT_OUTPUTS=["file", "elasticsearch"]
     ports:
       - "${PORT_KIBANA}:5601"
     depends_on:
@@ -223,7 +226,11 @@ services:
     networks:
       - kassa-net
     healthcheck:
+<<<<<<< isolate-rabbitmq-networks
       test: ["CMD-SHELL", "pg_isready -U ${KASSA_DB_USER} -d kassa-db"]
+=======
+      test: ["CMD-SHELL", "pg_isready -U ${KASSA_DB_USER} -d planning_db"]
+>>>>>>> main
       interval: 10s
       timeout: 5s
       retries: 5
@@ -242,8 +249,8 @@ services:
       - SYSTEM_NAME=Kassa
       - ODOO_PORT=8069
       - ODOO_URL=${ODOO_URL}
-      - ODOO_DATABASE=${ODOO_DB}
-      - ODOO_USERNAME=${ODOO_USERNAME}
+      - ODOO_DB=${ODOO_DB}
+      - ODOO_USER=${ODOO_USERNAME}
       - ODOO_PASSWORD=${ODOO_PASSWORD}
       - HOST=kassa-db
       - USER=${KASSA_DB_USER}
