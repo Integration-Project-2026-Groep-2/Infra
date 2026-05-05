@@ -226,7 +226,7 @@ services:
     networks:
       - kassa-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${PLANNING_DB_USER} -d planning_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${KASSA_DB_USER} -d planning_db"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -271,8 +271,8 @@ services:
       - SYSTEM_NAME=Kassa
       - ODOO_PORT=8069
       - ODOO_URL=${ODOO_URL}
-      - ODOO_DATABASE=${ODOO_DB}
-      - ODOO_USERNAME=${ODOO_USERNAME}
+      - ODOO_DB=${ODOO_DB}
+      - ODOO_USER=${ODOO_USERNAME}
       - ODOO_PASSWORD=${ODOO_PASSWORD}
       # DB env
       - HOST=kassa_db
