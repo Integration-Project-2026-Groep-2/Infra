@@ -92,7 +92,10 @@ services:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
       - ELASTICSEARCH_USERNAME=${KIBANA_USERNAME}
       - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
+      - SERVER_PUBLICBASEURL=${KIBANA_PUBLIC_URL}
       - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=${KIBANA_ENCRYPTION_KEY}
+      - XPACK_SECURITY_AUDIT_ENABLED=true
+      - XPACK_SECURITY_AUDIT_OUTPUTS=["file", "elasticsearch"]
     ports:
       - "${PORT_KIBANA}:5601"
     depends_on:
@@ -240,8 +243,8 @@ services:
       - SYSTEM_NAME=Kassa
       - ODOO_PORT=8069
       - ODOO_URL=${ODOO_URL}
-      - ODOO_DATABASE=${ODOO_DB}
-      - ODOO_USERNAME=${ODOO_USERNAME}
+      - ODOO_DB=${ODOO_DB}
+      - ODOO_USER=${ODOO_USERNAME}
       - ODOO_PASSWORD=${ODOO_PASSWORD}
       # DB env
       - HOST=kassa-db
@@ -260,6 +263,10 @@ services:
       - HEARTBEAT_ROUTING_KEY=routing.heartbeat
       - STATUS_CHECK_INTERVAL=30
       - LOG_LEVEL=INFO
+      # User CRUD
+      - USER_EVENTS_EXCHANGE=user.topic
+      - USER_EVENTS_EXCHANGE_TYPE=topic
+      - USER_EVENTS_RETRY_TTL_MS=15000
     volumes:
       - odoo_web_data_kassa:/var/lib/odoo
     networks:
