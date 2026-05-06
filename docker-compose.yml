@@ -327,6 +327,9 @@ services:
       - SALESFORCE_SECURITY_TOKEN=${SF_TOKEN}
       - SALESFORCE_DOMAIN=login
       - LOG_LEVEL=INFO
+      - CRM_MCP_HOST=0.0.0.0
+      - CRM_MCP_PORT=7001
+      - CRM_MCP_TRANSPORT=streamable-http
     networks:
       - rabbitmq_net
     <<: *default-logging
