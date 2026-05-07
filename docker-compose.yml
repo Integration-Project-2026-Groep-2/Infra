@@ -443,11 +443,17 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
+      crm:
+        condition: service_healthy
+      controlroom:
+        condition: service_healthy
     environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672/
       - RABBITMQ_EXCHANGE=ai.events
-      - MCP_SERVERS=crm@http://crm:7001/mcp,controlroom@http://controlroom:7002/mcp
-
+      - MCP_SERVERS=crm@http://crm:7001/mcp,controlroom@http://controlroom:5555/mcp
+      - CHAT_ALLOWED_ORIGINS=https://www.integration-project-2026-groep-2.my.be
+      - RUST_LOG=info,mcp_master=info
     networks:
       - mcp-rabbitmq
       - mcp-nginx
