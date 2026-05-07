@@ -446,7 +446,7 @@ services:
       crm:
         condition: service_healthy
       controlroom:
-        condition: service_healthy
+        condition: service_started
     environment:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672/
