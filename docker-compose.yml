@@ -438,7 +438,7 @@ services:
   # --- TEAM MCP ---
   mcp-master:
     image: ghcr.io/integration-project-2026-groep-2/mcp-master:latest-dev
-    container_name: mcp_master
+    container_name: mcp-master
     restart: unless-stopped
     depends_on:
       rabbitmq:
