@@ -445,8 +445,9 @@ services:
         condition: service_healthy
     environment:
       - RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672/
-      - MASTER_PORT=7000
-      - MASTER_TRANSPORT=streamable-http
+      - RABBITMQ_EXCHANGE=ai.events
+      - MCP_SERVERS=crm@http://crm:7001/mcp,controlroom@http://controlroom:7002/mcp
+
     networks:
       - mcp-rabbitmq
       - mcp-nginx
