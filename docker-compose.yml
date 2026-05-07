@@ -23,6 +23,7 @@ services:
       - rabbitmq_logs:/var/log/rabbitmq
     networks:
       - rabbitmq_net
+      - mcp-rabbitmq
     healthcheck:
       test: ["CMD-SHELL", "rabbitmq-diagnostics -q check_running && rabbitmq-diagnostics -q check_local_alarms"]
       interval: 10s
@@ -50,6 +51,7 @@ services:
     networks:
       - rabbitmq_net
       - nginx
+      - mcp-nginx
     command: |
       /bin/sh -c "
       echo \"${CONTROL_ROOM_USER}:$(openssl passwd -apr1 ${CONTROL_ROOM_PASS})\" > /etc/nginx/.htpasswd-control-room
@@ -77,6 +79,7 @@ services:
       - elasticsearch:/usr/share/elasticsearch/data
     networks:
       - controlroom-network
+      - mcp-controlroom
     healthcheck:
       test: ["CMD-SHELL", "curl -s -u elastic:$${ELASTIC_PASSWORD} http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\\|yellow\"'"]
       interval: 10s
@@ -104,6 +107,7 @@ services:
     networks:
       - controlroom-network
       - nginx
+      - mcp-controlroom
     <<: *default-logging
 
   controlroom:
@@ -123,6 +127,7 @@ services:
     networks:
       - controlroom-network
       - rabbitmq_net # Toegevoegd zodat deze container RabbitMQ kan vinden op hostname 'rabbitmq'
+      - mcp-controlroom
     restart: unless-stopped
     
     
@@ -141,6 +146,7 @@ services:
       - rabbitmq_net
       - billing_net
       - nginx
+      - mcp-facturatie
     <<: *default-logging
 
   billing_db:
@@ -182,6 +188,7 @@ services:
       - rabbitmq_net
       - mailing_net
       - nginx
+      - mcp-mailing
     restart: unless-stopped
     <<: *default-logging
 
@@ -304,6 +311,7 @@ services:
       - nginx 
       - rabbitmq_net
       - kassa-network
+      - mcp-kassa
     healthcheck:
       test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8069').read()\""]
       interval: 20s
@@ -332,6 +340,7 @@ services:
       - CRM_MCP_TRANSPORT=streamable-http
     networks:
       - rabbitmq_net
+      - mcp-crm
     <<: *default-logging
     
  
@@ -359,6 +368,7 @@ services:
       - nginx
       - rabbitmq_net
       - frontend-network
+      - mcp-frontend
 
   frontend_db:
     image: mariadb:12
@@ -422,6 +432,39 @@ services:
       - RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672
     networks:
       - rabbitmq_net
+      - mcp-planning
+  
+
+  # --- TEAM MCP ---
+  mcp-master:
+    image: ghcr.io/integration-project-2026-groep-2/mcp-master:latest-dev
+    container_name: mcp-master
+    restart: unless-stopped
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      crm:
+        condition: service_healthy
+      controlroom:
+        condition: service_healthy
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672/
+      - RABBITMQ_EXCHANGE=ai.events
+      - MCP_SERVERS=crm@http://crm:7001/mcp,controlroom@http://controlroom:5555/mcp
+      - CHAT_ALLOWED_ORIGINS=https://www.integration-project-2026-groep-2.my.be
+      - RUST_LOG=info,mcp_master=info
+    networks:
+      - mcp-rabbitmq
+      - mcp-nginx
+      - mcp-controlroom
+      - mcp-crm
+      - mcp-facturatie
+      - mcp-frontend
+      - mcp-kassa
+      - mcp-mailing
+      - mcp-planning
+    <<: *default-logging
 
 # --- VOLUMES & NETWORKS ---
 volumes:
@@ -458,3 +501,13 @@ networks:
     driver: bridge
   mailing_net:
     driver: bridge
+  
+  mcp-rabbitmq:
+  mcp-nginx:
+  mcp-controlroom:
+  mcp-crm:
+  mcp-facturatie:
+  mcp-frontend:
+  mcp-kassa:
+  mcp-mailing:
+  mcp-planning:
