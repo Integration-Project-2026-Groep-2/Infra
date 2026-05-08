@@ -124,6 +124,7 @@ services:
       - CONTROLROOM_ES_PASS=${CONTROLROOM_ES_PASS}
       - TEAMS_WEBHOOK_URL=${TEAMS_WEBHOOK_URL}
       - MONITORED_SERVICES=${MONITORED_SERVICES}
+      - MCP_PORT=5555
     networks:
       - controlroom-network
       - rabbitmq_net # Toegevoegd zodat deze container RabbitMQ kan vinden op hostname 'rabbitmq'
