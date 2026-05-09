@@ -362,6 +362,7 @@ services:
       - RABBITMQ_USER=${RABBITMQ_USER}
       - RABBITMQ_PASS=${RABBITMQ_PASS}
       - MCP_MASTER_BEARER_TOKEN=${MCP_MASTER_BEARER_TOKEN}
+      - CHAT_JWT_SECRET=${CHAT_JWT_SECRET}
     volumes:
       - drupal_profiles:/var/www/html/profiles
       - drupal_themes:/var/www/html/themes
@@ -456,6 +457,7 @@ services:
       - MCP_SERVERS=crm@http://crm:7001/mcp,controlroom@http://controlroom:5555/mcp
       - CHAT_ALLOWED_ORIGINS=https://www.integration-project-2026-groep-2.my.be
       - RUST_LOG=info,mcp_master=info
+      - CHAT_JWT_SECRET=${CHAT_JWT_SECRET}
     networks:
       - mcp-rabbitmq
       - mcp-nginx
