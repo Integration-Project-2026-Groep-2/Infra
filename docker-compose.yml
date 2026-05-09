@@ -361,6 +361,7 @@ services:
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_USER=${RABBITMQ_USER}
       - RABBITMQ_PASS=${RABBITMQ_PASS}
+      - MCP_MASTER_BEARER_TOKEN=${MCP_MASTER_BEARER_TOKEN}
     volumes:
       - drupal_profiles:/var/www/html/profiles
       - drupal_themes:/var/www/html/themes
