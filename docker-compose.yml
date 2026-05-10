@@ -125,6 +125,8 @@ services:
       - TEAMS_WEBHOOK_URL=${TEAMS_WEBHOOK_URL}
       - MONITORED_SERVICES=${MONITORED_SERVICES}
       - MCP_PORT=5555
+      - WATCHDOG_AMQP_ENABLED=true
+      - GITHUB_TOKEN=${CONTROL_ROOM_GH_TOKEN}
     networks:
       - controlroom-network
       - rabbitmq_net # Toegevoegd zodat deze container RabbitMQ kan vinden op hostname 'rabbitmq'
