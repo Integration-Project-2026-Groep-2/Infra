@@ -416,6 +416,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - planning-net
 
   # --- TEAM PLANNING ---
   planning:
@@ -438,6 +440,7 @@ services:
       - RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672
     networks:
       - rabbitmq_net
+      - planning-net
       - mcp-planning
   
 
