@@ -511,6 +511,7 @@ networks:
     driver: bridge
   mailing_net:
     driver: bridge
+  planning-net:
   
   mcp-rabbitmq:
   mcp-nginx:
