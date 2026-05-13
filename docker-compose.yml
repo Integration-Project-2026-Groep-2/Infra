@@ -475,6 +475,20 @@ services:
       - mcp-mailing
       - mcp-planning
     <<: *default-logging
+  
+  iot-badge-scanner:
+    image: ghcr.io/integration-project-2026-groep-2/iot-badge-scanner:latest-dev
+    container_name: iot-badge-scanner
+    restart: unless-stopped
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672/
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASS=${RABBITMQ_PASS}
+      - EXTERNAL_PORT=30071
 
 # --- VOLUMES & NETWORKS ---
 volumes:
@@ -512,6 +526,7 @@ networks:
   mailing_net:
     driver: bridge
   planning-net:
+  iot-badge-scanner-net:
   
   mcp-rabbitmq:
   mcp-nginx:
