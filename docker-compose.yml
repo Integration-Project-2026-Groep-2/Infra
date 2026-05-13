@@ -489,6 +489,9 @@ services:
       - RABBITMQ_USER=${RABBITMQ_USER}
       - RABBITMQ_PASS=${RABBITMQ_PASS}
       - EXTERNAL_PORT=30071
+    networks:
+      - rabbitmq-iot-badge-scanner
+    
 
 # --- VOLUMES & NETWORKS ---
 volumes:
@@ -526,7 +529,7 @@ networks:
   mailing_net:
     driver: bridge
   planning-net:
-  iot-badge-scanner-net:
+  rabbitmq-iot-badge-scanner:
   
   mcp-rabbitmq:
   mcp-nginx:
