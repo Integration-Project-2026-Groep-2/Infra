@@ -53,6 +53,7 @@ services:
       - rabbitmq_net
       - nginx
       - mcp-nginx
+      - nginx-iot-badge-scanner
     command: |
       /bin/sh -c "
       echo \"${CONTROL_ROOM_USER}:$(openssl passwd -apr1 ${CONTROL_ROOM_PASS})\" > /etc/nginx/.htpasswd-control-room
@@ -492,6 +493,7 @@ services:
       - EXTERNAL_PORT=30071
     networks:
       - rabbitmq-iot-badge-scanner
+      - nginx-iot-badge-scanner
     
 
 # --- VOLUMES & NETWORKS ---
@@ -531,6 +533,7 @@ networks:
     driver: bridge
   planning-net:
   rabbitmq-iot-badge-scanner:
+  nginx-iot-badge-scanner:
   
   mcp-rabbitmq:
   mcp-nginx:
